@@ -3,6 +3,11 @@ import * as ti from "taichi.js";
 export class MPM {
   constructor() {
     this.n_particles = Number(document.getElementById("n_particles").value);
+    const n_grid_text = document.getElementById("n_grid").value;
+    const value_index = n_grid_text.indexOf("x") - 1;
+    this.n_grid = Number(n_grid_text.slice(0, value_index));
+    this.dt = Number(document.getElementById("dt").value);
+    this.n_substeps = Number(document.getElementById("n_substeps").value);
     this.isCleanup = false;
   }
 
@@ -10,18 +15,15 @@ export class MPM {
     this.isCleanup = true;
     const display = document.getElementById("display");
     const canvas = document.querySelector("canvas");
-    display.removeChild(canvas);
     ti.clearKernelScope();
+    display.removeChild(canvas);
   }
 
   async run() {
     await ti.init();
 
-    let n_grid = 128;
-    let dx = 1 / n_grid;
-    let inv_dx = n_grid;
-    let dt = 1e-4;
-    let n_substeps = 20;
+    let dx = 1 / this.n_grid;
+    let inv_dx = this.n_grid;
     let p_vol = (dx * 0.5) ** 2;
     let p_rho = 1;
     let p_mass = p_vol * p_rho;
@@ -35,8 +37,8 @@ export class MPM {
     let F = ti.Matrix.field(2, 2, ti.f32, this.n_particles); // deformation gradient
     let material = ti.field(ti.i32, [this.n_particles]); // material id
     let Jp = ti.field(ti.f32, [this.n_particles]); // plastic deformation
-    let grid_v = ti.Vector.field(2, ti.f32, [n_grid, n_grid]);
-    let grid_m = ti.field(ti.f32, [n_grid, n_grid]);
+    let grid_v = ti.Vector.field(2, ti.f32, [this.n_grid, this.n_grid]);
+    let grid_m = ti.field(ti.f32, [this.n_grid, this.n_grid]);
 
     let img_size = 512;
     let image = ti.Vector.field(4, ti.f32, [img_size, img_size]);
@@ -44,11 +46,10 @@ export class MPM {
 
     ti.addToKernelScope({
       n_particles: this.n_particles,
-      n_grid,
+      n_grid: this.n_grid,
       dx,
       inv_dx,
-      dt,
-      n_substeps,
+      dt: this.dt,
       p_vol,
       p_rho,
       p_mass,
@@ -250,7 +251,7 @@ export class MPM {
         return;
       }
       if (!pause || is_forwarding) {
-        for (let i = 0; i < n_substeps; ++i) {
+        for (let i = 0; i < this.n_substeps; ++i) {
           substep();
         }
         is_forwarding = false;
