@@ -8,7 +8,16 @@ export class MPM {
     this.n_grid = Number(n_grid_text.slice(0, value_index));
     this.dt = Number(document.getElementById("dt").value);
     this.n_substeps = Number(document.getElementById("n_substeps").value);
+    this.E = Number(document.getElementById("E").value); // Young's modulus
+    this.nu = 0.2; // Poisson's ratio
+    this.mu_0 = this.E / (2 * (1 + this.nu));
+    this.lambda_0 = (this.E * this.nu) / ((1 + this.nu) * (1 - 2 * this.nu)); // Lame parameters
     this.isCleanup = false;
+  }
+
+  compute_parameters() {
+    this.mu_0 = this.E / (2 * (1 + this.nu));
+    this.lambda_0 = (this.E * this.nu) / ((1 + this.nu) * (1 - 2 * this.nu)); // Lame parameters
   }
 
   async cleanup() {
@@ -27,10 +36,6 @@ export class MPM {
     let p_vol = (dx * 0.5) ** 2;
     let p_rho = 1;
     let p_mass = p_vol * p_rho;
-    let E = 5e3; // Young's modulus a
-    let nu = 0.2; // Poisson's ratio
-    let mu_0 = E / (2 * (1 + nu));
-    let lambda_0 = (E * nu) / ((1 + nu) * (1 - 2 * nu)); // Lame parameters
     let x = ti.Vector.field(2, ti.f32, [this.n_particles]); // position
     let v = ti.Vector.field(2, ti.f32, [this.n_particles]); // velocity
     let C = ti.Matrix.field(2, 2, ti.f32, [this.n_particles]); // affine vel field
@@ -53,10 +58,6 @@ export class MPM {
       p_vol,
       p_rho,
       p_mass,
-      E,
-      nu,
-      mu_0,
-      lambda_0,
       x,
       v,
       C,
@@ -70,7 +71,7 @@ export class MPM {
       group_size,
     });
 
-    let substep = ti.kernel(() => {
+    let substep = ti.kernel((mu_0, lambda_0) => {
       for (let I of ti.ndrange(n_grid, n_grid)) {
         grid_v[I] = [0, 0];
         grid_m[I] = 0;
@@ -252,7 +253,7 @@ export class MPM {
       }
       if (!pause || is_forwarding) {
         for (let i = 0; i < this.n_substeps; ++i) {
-          substep();
+          substep(this.mu_0, this.lambda_0);
         }
         is_forwarding = false;
       }
@@ -278,6 +279,12 @@ export class MPM {
     forward.addEventListener("click", () => {
       pause = true;
       is_forwarding = true;
+    });
+
+    const youngsmodulus = document.getElementById("E");
+    youngsmodulus.addEventListener("change", () => {
+      this.E = Number(youngsmodulus.value);
+      this.compute_parameters();
     });
   }
 }

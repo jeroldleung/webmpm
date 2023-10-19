@@ -4,10 +4,10 @@ const parameterItems = [
   {
     name: "Young's modulus",
     id: "E",
-    minVal: 0.001,
-    maxVal: 0.009,
-    stepVal: 0.001,
-    defaultVal: 0.005,
+    minVal: 1000,
+    maxVal: 9000,
+    stepVal: 1000,
+    defaultVal: 5000,
   },
 ];
 
