@@ -163,8 +163,7 @@ export class MPM {
           grid_v[I][1] -= dt * 50; // gravity
           // handle user click interaction
           let dist = dx * I - mouse_position[0];
-          grid_v[I] +=
-            click_strength[0] * (dist / (0.01 + ti.norm(dist))) * dt * 200;
+          grid_v[I] += (dist / (0.01 + ti.norm(dist))) * dt * click_strength[0];
           if (i < 3 && grid_v[I][0] < 0) {
             grid_v[I][0] = 0;
           }
@@ -270,7 +269,7 @@ export class MPM {
       // catch mouse down
       click_strength.set([0], 0);
       if (canvas_clicked) {
-        click_strength.set([0], 1);
+        click_strength.set([0], 200);
       }
       if (!pause || is_forwarding) {
         for (let i = 0; i < this.n_substeps; ++i) {
