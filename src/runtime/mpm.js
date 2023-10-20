@@ -163,7 +163,8 @@ export class MPM {
           grid_v[I][1] -= dt * 50; // gravity
           // handle user click interaction
           let dist = dx * I - mouse_position[0];
-          grid_v[I] += click_strength[0] * ti.normalized(dist) * dt * 200;
+          grid_v[I] +=
+            click_strength[0] * (dist / (0.01 + ti.norm(dist))) * dt * 200;
           if (i < 3 && grid_v[I][0] < 0) {
             grid_v[I][0] = 0;
           }
