@@ -44,8 +44,11 @@ export class MPM {
     let Jp = ti.field(ti.f32, [this.n_particles]); // plastic deformation
     let grid_v = ti.Vector.field(2, ti.f32, [this.n_grid, this.n_grid]);
     let grid_m = ti.field(ti.f32, [this.n_grid, this.n_grid]);
+    let mouse_position = ti.Vector.field(2, ti.f32, [1]);
+    let click_strength = ti.field(ti.i32, [1]);
 
     let img_size = 512;
+    let inv_img_size = 1 / img_size;
     let image = ti.Vector.field(4, ti.f32, [img_size, img_size]);
     let group_size = this.n_particles / 3;
 
@@ -69,6 +72,8 @@ export class MPM {
       image,
       img_size,
       group_size,
+      mouse_position,
+      click_strength,
     });
 
     let substep = ti.kernel((mu_0, lambda_0) => {
@@ -76,6 +81,8 @@ export class MPM {
         grid_v[I] = [0, 0];
         grid_m[I] = 0;
       }
+
+      // Particle to grid
       for (let p of ti.range(n_particles)) {
         let base = ti.i32(x[p] * inv_dx - 0.5);
         let fx = x[p] * inv_dx - ti.f32(base);
@@ -146,12 +153,17 @@ export class MPM {
           }
         }
       }
+
+      // Grid operation
       for (let I of ti.ndrange(n_grid, n_grid)) {
         let i = I[0];
         let j = I[1];
         if (grid_m[I] > 0) {
           grid_v[I] = (1 / grid_m[I]) * grid_v[I];
-          grid_v[I][1] -= dt * 50;
+          grid_v[I][1] -= dt * 50; // gravity
+          // handle user click interaction
+          let dist = dx * I - mouse_position[0];
+          grid_v[I] += (dist / (0.01 + ti.norm(dist))) * dt * click_strength[0];
           if (i < 3 && grid_v[I][0] < 0) {
             grid_v[I][0] = 0;
           }
@@ -166,6 +178,8 @@ export class MPM {
           }
         }
       }
+
+      // Grid to particle
       for (let p of ti.range(n_particles)) {
         let base = ti.i32(x[p] * inv_dx - 0.5);
         let fx = x[p] * inv_dx - ti.f32(base);
@@ -238,18 +252,24 @@ export class MPM {
     let htmlCanvas = document.createElement("canvas");
     htmlCanvas.width = img_size;
     htmlCanvas.height = img_size;
-    htmlCanvas.className = "w-full";
+    htmlCanvas.className = "w-full cursor-pointer";
     display.appendChild(htmlCanvas);
     let canvas = new ti.Canvas(htmlCanvas);
 
     let pause = false;
     let is_forwarding = false;
+    let canvas_clicked = false;
 
     reset();
 
     let frame = async () => {
       if (window.shouldStop || this.isCleanup) {
         return;
+      }
+      // catch mouse down
+      click_strength.set([0], 0);
+      if (canvas_clicked) {
+        click_strength.set([0], 200);
       }
       if (!pause || is_forwarding) {
         for (let i = 0; i < this.n_substeps; ++i) {
@@ -285,6 +305,22 @@ export class MPM {
     youngsmodulus.addEventListener("change", () => {
       this.E = Number(youngsmodulus.value);
       this.compute_parameters();
+    });
+
+    htmlCanvas.addEventListener("mousemove", (event) => {
+      // Get the mouse coordinates relative to the canvas
+      const rect = htmlCanvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) * inv_img_size;
+      const y = (rect.bottom - event.clientY) * inv_img_size;
+      mouse_position.set([0], [x, y]);
+    });
+
+    htmlCanvas.addEventListener("mousedown", () => {
+      canvas_clicked = true;
+    });
+
+    htmlCanvas.addEventListener("mouseup", () => {
+      canvas_clicked = false;
     });
   }
 }
