@@ -2,7 +2,16 @@ import SimulationControls from "./SimulationControls.jsx";
 import MaterialParameters from "./MaterialParameters.jsx";
 
 function Display() {
-  return <div id="display"></div>;
+  return (
+    <div id="display">
+      <canvas
+        id="result_canvas"
+        className="w-full cursor-pointer"
+        width={512}
+        height={512}
+      ></canvas>
+    </div>
+  );
 }
 
 function Controls({ reset, setReset, setState }) {

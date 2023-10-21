@@ -22,10 +22,7 @@ export class MPM {
 
   async cleanup() {
     this.isCleanup = true;
-    const display = document.getElementById("display");
-    const canvas = document.querySelector("canvas");
-    ti.clearKernelScope();
-    display.removeChild(canvas);
+    await ti.clearKernelScope();
   }
 
   async run() {
@@ -248,12 +245,7 @@ export class MPM {
       }
     });
 
-    const display = document.getElementById("display");
-    let htmlCanvas = document.createElement("canvas");
-    htmlCanvas.width = img_size;
-    htmlCanvas.height = img_size;
-    htmlCanvas.className = "w-full cursor-pointer";
-    display.appendChild(htmlCanvas);
+    let htmlCanvas = document.getElementById("result_canvas");
     let canvas = new ti.Canvas(htmlCanvas);
 
     let pause = false;
