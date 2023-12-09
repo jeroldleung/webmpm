@@ -1,6 +1,6 @@
 function Link({ addr, text }) {
   return (
-    <a href={addr} target="_blank" className="text-purple-600">
+    <a href={addr} target="_blank" className="text-blue-600 hover:underline">
       {text}
     </a>
   );
