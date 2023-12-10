@@ -1,5 +1,11 @@
 const controlItems = [
   {
+    name: "Scenes",
+    id: "scenes",
+    defaultValue: "Water & Jelly & Snow",
+    values: ["Water & Jelly & Snow"],
+  },
+  {
     name: "Number of Particles",
     id: "n_particles",
     defaultValue: 9000,
