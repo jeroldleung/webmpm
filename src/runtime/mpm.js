@@ -3,9 +3,7 @@ import * as ti from "taichi.js";
 export class MPM {
   constructor() {
     this.n_particles = Number(document.getElementById("n_particles").value);
-    const n_grid_text = document.getElementById("n_grid").value;
-    const value_index = n_grid_text.indexOf("x") - 1;
-    this.n_grid = Number(n_grid_text.slice(0, value_index));
+    this.n_grid = parseInt(document.getElementById("n_grid").value);
     this.dt = Number(document.getElementById("dt").value);
     this.n_substeps = Number(document.getElementById("n_substeps").value);
     this.E = Number(document.getElementById("E").value); // Young's modulus
