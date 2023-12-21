@@ -1,16 +1,5 @@
 import { useState } from "react";
 
-const parameterItems = [
-  {
-    name: "Young's modulus",
-    id: "E",
-    minVal: 1000,
-    maxVal: 9000,
-    stepVal: 1000,
-    defaultVal: 5000,
-  },
-];
-
 function Slider({ item }) {
   const [currentVal, setCurrentVal] = useState(item.defaultVal);
   return (
@@ -32,8 +21,8 @@ function Slider({ item }) {
   );
 }
 
-export default function MaterialParameters() {
-  const items = parameterItems.map((item) => <Slider item={item} />);
+export default function ParameterSlider({ options }) {
+  const items = options.map((single_item) => <Slider item={single_item} />);
   return (
     <div className="flex flex-col gap-1 sm:w-56">
       <p className="font-bold text-lg">PARAMETERS</p>

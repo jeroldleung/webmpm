@@ -1,12 +1,56 @@
-import Playground from "./components/Playground.jsx";
-import Article from "./components/Article.jsx";
+import { useEffect } from "react";
+import { init } from "taichi.js";
+
+import TopControlBar from "./components/TopControlBar.jsx";
+import DisplayWindow from "./components/DisplayWindow.jsx";
+import ControlSelection from "./components/ControlSelection.jsx";
+import ParameterSlider from "./components/ParameterSlider.jsx";
+import Introduction from "./components/Introduction.jsx";
 import Footer from "./components/Footer.jsx";
 
+import MPM from "./simulation/mpm.js";
+import Renderer from "./simulation/renderer.js";
+import Scene from "./simulation/scene.js";
+import { CONTROL_ITEMS, PARAMETER_ITEMS } from "./simulation/config.js";
+
 export default function App() {
+  useEffect(() => {
+    let returnFromMain = false;
+    let main = async () => {
+      await init();
+      let mpm = new MPM();
+      let scene = new Scene();
+      let renderer = new Renderer();
+      let frame = async () => {
+        if (returnFromMain) return;
+        mpm.run();
+        await renderer.render(scene);
+        requestAnimationFrame(frame);
+      };
+
+      scene.create();
+      await mpm.init(scene.objects);
+      await frame();
+    };
+
+    main();
+
+    return () => {
+      returnFromMain = true;
+    };
+  });
+
   return (
     <div>
-      <Playground />
-      <Article />
+      <TopControlBar />
+      <div className="flex py-8 place-content-center gap-4 flex-wrap">
+        <DisplayWindow />
+        <div className="flex flex-col sm:max-md:flex-row py-2 px-1 gap-8">
+          <ControlSelection options={CONTROL_ITEMS} />
+          <ParameterSlider options={PARAMETER_ITEMS} />
+        </div>
+      </div>
+      <Introduction />
       <Footer />
     </div>
   );
