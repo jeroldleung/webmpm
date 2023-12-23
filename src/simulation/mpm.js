@@ -9,6 +9,17 @@ export default class MPM {
     this.n_substeps = Number(document.getElementById("n_substeps").value);
   }
 
+  quadraticKernel = ti.func((x) => {
+    x = Math.abs(x);
+    let res = 0.0;
+    if (x >= 0.5 && x < 1.5) {
+      res = 0.5 * (1.5 - x) ** 2;
+    } else if (x < 0.5) {
+      res = 0.75 - x ** 2;
+    }
+    return res;
+  });
+
   async init(objects) {
     this.material = objects;
 
@@ -23,7 +34,6 @@ export default class MPM {
       for (let p of ti.range(this.material[0].n_particles)) {
         let base = ti.i32(this.material[0].x[p] * this.grid.inv_dx - 0.5);
         let fx = this.material[0].x[p] * this.grid.inv_dx - ti.f32(base);
-        let w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1) ** 2, 0.5 * (fx - 0.5) ** 2];
         this.material[0].F[p] = (
           [
             [1.0, 0.0],
@@ -75,14 +85,15 @@ export default class MPM {
             la *
             J *
             (J - 1);
-        stress =
-          -this.dt * this.material[0].p_vol * 4 * this.grid.inv_dx * this.grid.inv_dx * stress;
-        let affine = stress + this.material[0].p_mass * this.material[0].C[p];
+        let affine =
+          -this.dt * this.material[0].p_vol * 4 * this.grid.inv_dx * this.grid.inv_dx * stress +
+          this.material[0].p_mass * this.material[0].C[p];
         for (let i of ti.static(ti.range(3))) {
           for (let j of ti.static(ti.range(3))) {
             let offset = [i, j];
             let dpos = (ti.f32(offset) - fx) * this.grid.dx;
-            let weight = w[[i, 0]] * w[[j, 1]];
+            let weight =
+              this.quadraticKernel((fx - offset)[0]) * this.quadraticKernel((fx - offset)[1]);
             this.grid.grid_v[base + offset] +=
               weight * (this.material[0].p_mass * this.material[0].v[p] + affine.matmul(dpos));
             this.grid.grid_m[base + offset] += weight * this.material[0].p_mass;
@@ -118,7 +129,6 @@ export default class MPM {
       for (let p of ti.range(this.material[0].n_particles)) {
         let base = ti.i32(this.material[0].x[p] * this.grid.inv_dx - 0.5);
         let fx = this.material[0].x[p] * this.grid.inv_dx - ti.f32(base);
-        let w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1.0) ** 2, 0.5 * (fx - 0.5) ** 2];
         let new_v = [0.0, 0.0];
         let new_C = [
           [0.0, 0.0],
@@ -126,9 +136,11 @@ export default class MPM {
         ];
         for (let i of ti.static(ti.range(3))) {
           for (let j of ti.static(ti.range(3))) {
-            let dpos = ti.f32([i, j]) - fx;
-            let g_v = this.grid.grid_v[base + [i, j]];
-            let weight = w[[i, 0]] * w[[j, 1]];
+            let offset = [i, j];
+            let dpos = ti.f32(offset) - fx;
+            let g_v = this.grid.grid_v[base + offset];
+            let weight =
+              this.quadraticKernel((fx - offset)[0]) * this.quadraticKernel((fx - offset)[1]);
             new_v = new_v + weight * g_v;
             new_C = new_C + 4 * this.grid.inv_dx * weight * g_v.outerProduct(dpos);
           }
