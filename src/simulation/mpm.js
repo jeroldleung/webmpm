@@ -34,57 +34,7 @@ export default class MPM {
       for (let p of ti.range(this.material[0].n_particles)) {
         let base = ti.i32(this.material[0].x[p] * this.grid.inv_dx - 0.5);
         let fx = this.material[0].x[p] * this.grid.inv_dx - ti.f32(base);
-        this.material[0].F[p] = (
-          [
-            [1.0, 0.0],
-            [0.0, 1.0],
-          ] +
-          this.dt * this.material[0].C[p]
-        ).matmul(this.material[0].F[p]);
-        let h = ti.f32(ti.max(0.1, ti.min(5, ti.exp(10 * (1.0 - this.material[0].Jp[p])))));
-        if (this.material[0].type[p] == 1) {
-          h = 0.3;
-        }
-        let mu = this.material[0].mu_0 * h;
-        let la = this.material[0].lambda_0 * h;
-        if (this.material[0].type[p] == 0) {
-          mu = 0.0;
-        }
-        let svd = ti.svd2D(this.material[0].F[p]);
-        let U = svd.U;
-        let sig = svd.E;
-        let V = svd.V;
-        let J = 1.0;
-        for (let d of ti.static(ti.range(2))) {
-          let new_sig = sig[[d, d]];
-          if (this.material[0].type[p] == 2) {
-            // Plasticity
-            new_sig = ti.min(ti.max(sig[[d, d]], 1 - 2.5e-2), 1 + 4.5e-3);
-          }
-          this.material[0].Jp[p] = (this.material[0].Jp[p] * sig[[d, d]]) / new_sig;
-          sig[[d, d]] = new_sig;
-          J = J * new_sig;
-        }
-        if (this.material[0].type[p] == 0) {
-          this.material[0].F[p] =
-            [
-              [1.0, 0.0],
-              [0.0, 1.0],
-            ] * ti.sqrt(J);
-        } else if (this.material[0].type[p] == 2) {
-          this.material[0].F[p] = U.matmul(sig).matmul(V.transpose());
-        }
-        let stress =
-          (2 * mu * (this.material[0].F[p] - U.matmul(V.transpose()))).matmul(
-            this.material[0].F[p].transpose(),
-          ) +
-          [
-            [1.0, 0.0],
-            [0.0, 1.0],
-          ] *
-            la *
-            J *
-            (J - 1);
+        let stress = this.material[0].computeStress(p);
         let affine =
           -this.dt * this.material[0].p_vol * 4 * this.grid.inv_dx * this.grid.inv_dx * stress +
           this.material[0].p_mass * this.material[0].C[p];
@@ -148,6 +98,8 @@ export default class MPM {
         this.material[0].v[p] = new_v;
         this.material[0].C[p] = new_C;
         this.material[0].x[p] = this.material[0].x[p] + this.dt * new_v;
+        this.material[0].J[p] =
+          (1.0 + this.dt * (new_C[0][0] + new_C[1][1])) * this.material[0].J[p];
       }
     });
 
@@ -159,13 +111,12 @@ export default class MPM {
           ti.random() * 0.2 + 0.3 + 0.1 * group_id,
           ti.random() * 0.2 + 0.05 + 0.32 * group_id,
         ];
-        this.material[0].type[i] = group_id;
         this.material[0].v[i] = [0, 0];
         this.material[0].F[i] = [
           [1, 0],
           [0, 1],
         ];
-        this.material[0].Jp[i] = 1;
+        this.material[0].J[i] = 1;
         this.material[0].C[i] = [
           [0, 0],
           [0, 0],
