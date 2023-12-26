@@ -6,10 +6,10 @@ export const CONTROL_ITEMS = [
     values: ["Water & Jelly & Snow"],
   },
   {
-    name: "Number of Particles",
-    id: "n_particles",
-    defaultValue: 9000,
-    values: [3000, 6000, 9000, 12000, 15000],
+    name: "Particle Volume",
+    id: "p_vol",
+    defaultValue: 0.00001,
+    values: [0.000001, 0.000003, 0.00001, 0.00003, 0.0001, 0.0003],
   },
   {
     name: "Grid Resolution",

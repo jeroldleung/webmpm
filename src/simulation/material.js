@@ -2,7 +2,10 @@ import * as ti from "taichi.js";
 
 export default class Material {
   constructor(color, center) {
-    this.n_particles = Number(document.getElementById("n_particles").value); // number of particles
+    this.p_vol = parseFloat(document.getElementById("p_vol").value); // particle volume
+    this.p_rho = 1; // particle density
+    this.p_mass = this.p_vol * this.p_rho; // particle mass
+    this.n_particles = Math.floor(0.3 ** 2 / this.p_vol); // number of particles
     this.x = ti.Vector.field(2, ti.f32, [this.n_particles]); // position
     this.v = ti.Vector.field(2, ti.f32, [this.n_particles]); // velocity
     this.C = ti.Matrix.field(2, 2, ti.f32, [this.n_particles]); // affine velocity
@@ -12,9 +15,6 @@ export default class Material {
     this.nu = 0.2; // Poisson's ratio
     this.mu_0 = this.E / (2 * (1 + this.nu)); // Lame parameters
     this.lambda_0 = (this.E * this.nu) / ((1 + this.nu) * (1 - 2 * this.nu)); // Lame parameters
-    this.p_vol = ((1 / parseFloat(document.getElementById("n_grid").value)) * 0.5) ** 2; // particle volume
-    this.p_rho = 1; // particle density
-    this.p_mass = this.p_vol * this.p_rho; // particle mass
     this.type = ti.field(ti.i32, [this.n_particles]); // material type
     this.color = color; // material color
     this.center = center;
