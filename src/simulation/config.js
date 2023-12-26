@@ -2,8 +2,8 @@ export const CONTROL_ITEMS = [
   {
     name: "Scenes",
     id: "scenes",
-    defaultValue: "Water & Jelly & Snow",
-    values: ["Water & Jelly & Snow"],
+    defaultValue: "Water Dam Break",
+    values: ["Water Dam Break"],
   },
   {
     name: "Particle Volume",

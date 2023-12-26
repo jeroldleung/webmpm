@@ -7,8 +7,8 @@ export default class Scene {
   }
 
   async create() {
-    if (this.scene == "Water & Jelly & Snow") {
-      this.objects.push(new Material([0.06, 0.46, 0.43, 1.0], [0.4, 0.4]));
+    if (this.scene == "Water Dam Break") {
+      this.objects.push(new Material(0.5, [0.1, 0.1], [0.06, 0.46, 0.43, 1.0]));
     }
   }
 }
