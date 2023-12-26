@@ -22,6 +22,9 @@ export default class MPM {
 
   async init(objects) {
     this.material = objects;
+    for (let obj of this.material) {
+      obj.init();
+    }
 
     this.clearGridState = ti.classKernel(this, () => {
       for (let I of ti.ndrange(this.grid.n_grid, this.grid.n_grid)) {
@@ -102,29 +105,6 @@ export default class MPM {
           (1.0 + this.dt * (new_C[0][0] + new_C[1][1])) * this.material[0].J[p];
       }
     });
-
-    this.reset = ti.classKernel(this, () => {
-      let group_size = this.material[0].n_particles / 3;
-      for (let i of ti.range(this.material[0].n_particles)) {
-        let group_id = ti.i32(ti.floor(i / group_size));
-        this.material[0].x[i] = [
-          ti.random() * 0.2 + 0.3 + 0.1 * group_id,
-          ti.random() * 0.2 + 0.05 + 0.32 * group_id,
-        ];
-        this.material[0].v[i] = [0, 0];
-        this.material[0].F[i] = [
-          [1, 0],
-          [0, 1],
-        ];
-        this.material[0].J[i] = 1;
-        this.material[0].C[i] = [
-          [0, 0],
-          [0, 0],
-        ];
-      }
-    });
-
-    this.reset();
   }
 
   async run() {
