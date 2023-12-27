@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { init } from "taichi.js";
 
 import TopControlBar from "./components/TopControlBar.jsx";
@@ -14,6 +14,12 @@ import Scene from "./simulation/scene.js";
 import { CONTROL_ITEMS, PARAMETER_ITEMS } from "./simulation/config.js";
 
 export default function App() {
+  const [isRunning, setRunning] = useState(false);
+
+  function handleSelection() {
+    setRunning(!isRunning);
+  }
+
   useEffect(() => {
     let returnFromMain = false;
     let main = async () => {
@@ -38,7 +44,7 @@ export default function App() {
     return () => {
       returnFromMain = true;
     };
-  });
+  }, [isRunning]);
 
   return (
     <div>
@@ -46,7 +52,7 @@ export default function App() {
       <div className="flex py-8 place-content-center gap-4 flex-wrap">
         <DisplayWindow />
         <div className="flex flex-col sm:max-md:flex-row py-2 px-1 gap-8">
-          <ControlSelection options={CONTROL_ITEMS} />
+          <ControlSelection options={CONTROL_ITEMS} onSelectHandler={handleSelection} />
           <ParameterSlider options={PARAMETER_ITEMS} />
         </div>
       </div>
