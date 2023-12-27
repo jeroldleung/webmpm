@@ -22,6 +22,8 @@ export default function App() {
 
   useEffect(() => {
     let returnFromMain = false;
+    let simulationState = "play";
+
     let main = async () => {
       await init();
       let mpm = new MPM();
@@ -29,7 +31,18 @@ export default function App() {
       let renderer = new Renderer();
       let frame = async () => {
         if (returnFromMain) return;
-        mpm.run();
+        if (simulationState == "stop") {
+          for (let obj of scene.objects) {
+            obj.init();
+          }
+          simulationState = "pause";
+        }
+        if (simulationState != "pause") {
+          mpm.run();
+          if (simulationState == "forward") {
+            simulationState = "pause";
+          }
+        }
         await renderer.render(scene);
         requestAnimationFrame(frame);
       };
@@ -40,6 +53,15 @@ export default function App() {
     };
 
     main();
+    document.getElementById("stop").addEventListener("click", () => {
+      simulationState = "stop";
+    });
+    document.getElementById("playpause").addEventListener("click", () => {
+      simulationState == "play" ? (simulationState = "pause") : (simulationState = "play");
+    });
+    document.getElementById("forward").addEventListener("click", () => {
+      simulationState = "forward";
+    });
 
     return () => {
       returnFromMain = true;
