@@ -47,3 +47,10 @@ export const PARAMETER_ITEMS = [
     defaultVal: 5000,
   },
 ];
+
+export const simulationControl = {
+  currentState: "play",
+  changeState: function (value) {
+    this.currentState = value;
+  },
+};

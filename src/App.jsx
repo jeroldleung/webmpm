@@ -11,7 +11,7 @@ import Footer from "./components/Footer.jsx";
 import MPM from "./simulation/mpm.js";
 import Renderer from "./simulation/renderer.js";
 import Scene from "./simulation/scene.js";
-import { CONTROL_ITEMS, PARAMETER_ITEMS } from "./simulation/config.js";
+import { CONTROL_ITEMS, PARAMETER_ITEMS, simulationControl } from "./simulation/config.js";
 
 export default function App() {
   const [isRunning, setRunning] = useState(false);
@@ -22,7 +22,6 @@ export default function App() {
 
   useEffect(() => {
     let returnFromMain = false;
-    let simulationState = "play";
 
     let main = async () => {
       await init();
@@ -31,16 +30,16 @@ export default function App() {
       let renderer = new Renderer();
       let frame = async () => {
         if (returnFromMain) return;
-        if (simulationState == "stop") {
+        if (simulationControl.currentState == "stop") {
           for (let obj of scene.objects) {
             obj.init();
           }
-          simulationState = "pause";
+          simulationControl.changeState("pause");
         }
-        if (simulationState != "pause") {
+        if (simulationControl.currentState != "pause") {
           mpm.run();
-          if (simulationState == "forward") {
-            simulationState = "pause";
+          if (simulationControl.currentState == "forward") {
+            simulationControl.changeState("pause");
           }
         }
         await renderer.render(scene);
@@ -53,15 +52,6 @@ export default function App() {
     };
 
     main();
-    document.getElementById("stop").addEventListener("click", () => {
-      simulationState = "stop";
-    });
-    document.getElementById("playpause").addEventListener("click", () => {
-      simulationState == "play" ? (simulationState = "pause") : (simulationState = "play");
-    });
-    document.getElementById("forward").addEventListener("click", () => {
-      simulationState = "forward";
-    });
 
     return () => {
       returnFromMain = true;
@@ -70,7 +60,7 @@ export default function App() {
 
   return (
     <div>
-      <TopControlBar />
+      <TopControlBar simulationControl={simulationControl} />
       <div className="flex py-8 place-content-center gap-4 flex-wrap">
         <DisplayWindow />
         <div className="flex flex-col sm:max-md:flex-row py-2 px-1 gap-8">
