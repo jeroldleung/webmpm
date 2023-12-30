@@ -1,4 +1,4 @@
-import { GithubIcon } from "../assets/Icons.jsx";
+import { GithubIcon } from "./Icons.jsx";
 
 export default function Footer() {
   return (

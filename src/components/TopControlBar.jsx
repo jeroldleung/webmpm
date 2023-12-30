@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StopIcon, PlayIcon, PauseIcon, ForwardIcon } from "../assets/Icons.jsx";
+import { StopIcon, PlayIcon, PauseIcon, ForwardIcon } from "./Icons.jsx";
 
 export default function TopControlBar({ simulationControl }) {
   const [state, setState] = useState(simulationControl.currentState);
