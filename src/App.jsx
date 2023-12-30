@@ -11,7 +11,8 @@ import Footer from "./components/Footer.jsx";
 import MPM from "./simulation/mpm.js";
 import Renderer from "./simulation/renderer.js";
 import Scene from "./simulation/scene.js";
-import { CONTROL_ITEMS, PARAMETER_ITEMS, simulationControl } from "./simulation/config.js";
+import { CONTROL_ITEMS, PARAMETER_ITEMS } from "./simulation/config.js";
+import { simulationControl } from "./simulation/control.js";
 
 export default function App() {
   const [isRunning, setRunning] = useState(false);
