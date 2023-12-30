@@ -12,11 +12,11 @@ export default function DisplayWindow({ userInteraction }) {
   };
 
   const enableClickStrength = () => {
-    userInteraction.setClickStrength(200);
+    userInteraction.setClickStrength(200.0);
   };
 
   const disableClickStrength = () => {
-    userInteraction.setClickStrength(0);
+    userInteraction.setClickStrength(0.0);
   };
 
   useEffect(() => {

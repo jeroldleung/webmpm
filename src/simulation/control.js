@@ -16,7 +16,7 @@ export const simulationControl = {
 
 export const userInteraction = {
   mousePosition: [0.0, 0.0],
-  clickStrength: 0,
+  clickStrength: 0.0,
   setMousePosition: function (x, y) {
     this.mousePosition = [x, y];
   },

@@ -55,7 +55,7 @@ export default class MPM {
 
     this.updateGridVelocity = ti.classKernel(
       this,
-      { mouse_position: ti.types.vector(ti.f32, 2), click_strength: ti.i32 },
+      { mouse_position: ti.types.vector(ti.f32, 2), click_strength: ti.f32 },
       (mouse_position, click_strength) => {
         for (let I of ti.ndrange(this.grid.n_grid, this.grid.n_grid)) {
           let i = I[0];
