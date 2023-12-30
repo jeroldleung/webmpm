@@ -46,4 +46,12 @@ export const PARAMETER_ITEMS = [
     stepVal: 1000,
     defaultVal: 5000,
   },
+  {
+    name: "Bulk modulus",
+    id: "bulk_modulus",
+    minVal: 0,
+    maxVal: 1000,
+    stepVal: 100,
+    defaultVal: 800,
+  },
 ];
