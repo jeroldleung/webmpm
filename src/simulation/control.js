@@ -13,3 +13,14 @@ export const simulationControl = {
     this.changeState(currentEvent[1]);
   },
 };
+
+export const userInteraction = {
+  mousePosition: [0.0, 0.0],
+  clickStrength: 0,
+  setMousePosition: function (x, y) {
+    this.mousePosition = [x, y];
+  },
+  setClickStrength: function (value) {
+    this.clickStrength = value;
+  },
+};

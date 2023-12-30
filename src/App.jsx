@@ -12,7 +12,7 @@ import MPM from "./simulation/mpm.js";
 import Renderer from "./simulation/renderer.js";
 import Scene from "./simulation/scene.js";
 import { CONTROL_ITEMS, PARAMETER_ITEMS } from "./simulation/config.js";
-import { simulationControl } from "./simulation/control.js";
+import { simulationControl, userInteraction } from "./simulation/control.js";
 
 export default function App() {
   const [isRunning, setRunning] = useState(false);
@@ -60,7 +60,7 @@ export default function App() {
     <div>
       <TopControlBar simulationControl={simulationControl} />
       <div className="flex py-8 place-content-center gap-4 flex-wrap">
-        <DisplayWindow />
+        <DisplayWindow userInteraction={userInteraction} />
         <div className="flex flex-col sm:max-md:flex-row py-2 px-1 gap-8">
           <ControlSelection options={CONTROL_ITEMS} onSelectHandler={handleSelection} />
           <ParameterSlider options={PARAMETER_ITEMS} />
