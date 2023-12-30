@@ -29,20 +29,16 @@ export default function App() {
       let mpm = new MPM();
       let scene = new Scene();
       let renderer = new Renderer();
+
+      // register the state machine
+      simulationControl.addState("play", () => { mpm.run(); }, "play"); // prettier-ignore
+      simulationControl.addState("pause", () => {}, "pause"); // prettier-ignore
+      simulationControl.addState("stop", () => { mpm.init(scene.objects); }, "pause"); // prettier-ignore
+      simulationControl.addState("forward", () => { mpm.run(); }, "pause"); // prettier-ignore
+
       let frame = async () => {
         if (returnFromMain) return;
-        if (simulationControl.currentState == "stop") {
-          for (let obj of scene.objects) {
-            obj.init();
-          }
-          simulationControl.changeState("pause");
-        }
-        if (simulationControl.currentState != "pause") {
-          mpm.run();
-          if (simulationControl.currentState == "forward") {
-            simulationControl.changeState("pause");
-          }
-        }
+        simulationControl.run();
         await renderer.render(scene);
         requestAnimationFrame(frame);
       };
