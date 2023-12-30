@@ -33,7 +33,7 @@ export default function App() {
       // register the state machine
       simulationControl.addState("play", () => { mpm.run(); }, "play"); // prettier-ignore
       simulationControl.addState("pause", () => {}, "pause"); // prettier-ignore
-      simulationControl.addState("stop", () => { mpm.init(scene.objects); }, "pause"); // prettier-ignore
+      simulationControl.addState("stop", () => { mpm.reset(); }, "pause"); // prettier-ignore
       simulationControl.addState("forward", () => { mpm.run(); }, "pause"); // prettier-ignore
 
       let frame = async () => {
@@ -45,6 +45,7 @@ export default function App() {
 
       scene.create();
       await mpm.init(scene.objects);
+      mpm.reset();
       await frame();
     };
 

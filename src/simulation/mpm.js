@@ -22,9 +22,6 @@ export default class MPM {
 
   async init(objects) {
     this.material = objects;
-    for (let obj of this.material) {
-      obj.init();
-    }
 
     this.clearGridState = ti.classKernel(this, () => {
       for (let I of ti.ndrange(this.grid.n_grid, this.grid.n_grid)) {
@@ -105,6 +102,12 @@ export default class MPM {
           (1.0 + this.dt * (new_C[0][0] + new_C[1][1])) * this.material[0].J[p];
       }
     });
+  }
+
+  async reset() {
+    for (let obj of this.material) {
+      obj.init();
+    }
   }
 
   async run() {
