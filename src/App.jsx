@@ -12,7 +12,7 @@ import MPM from "./simulation/mpm.js";
 import Renderer from "./simulation/renderer.js";
 import Scene from "./simulation/scene.js";
 import { CONTROL_ITEMS, PARAMETER_ITEMS } from "./simulation/config.js";
-import { simulationControl, userInteraction } from "./simulation/control.js";
+import { simulationControl, userInteraction, materialProperties } from "./simulation/control.js";
 
 export default function App() {
   const [isRunning, setRunning] = useState(false);
@@ -63,7 +63,7 @@ export default function App() {
         <DisplayWindow userInteraction={userInteraction} />
         <div className="flex flex-col sm:max-md:flex-row py-2 px-1 gap-8">
           <ControlSelection options={CONTROL_ITEMS} onSelectHandler={handleSelection} />
-          <ParameterSlider options={PARAMETER_ITEMS} />
+          <ParameterSlider options={PARAMETER_ITEMS} materialProperties={materialProperties} />
         </div>
       </div>
       <Introduction />

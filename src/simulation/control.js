@@ -24,3 +24,13 @@ export const userInteraction = {
     this.clickStrength = value;
   },
 };
+
+export const materialProperties = {
+  propertyValues: {},
+  setValue: function (which, value) {
+    this.propertyValues[which] = value;
+  },
+  getValue: function (which) {
+    return this.propertyValues[which];
+  },
+};

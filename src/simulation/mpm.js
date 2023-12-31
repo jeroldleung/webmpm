@@ -1,6 +1,6 @@
 import * as ti from "taichi.js";
 import Grid from "./grid";
-import { userInteraction } from "./control";
+import { userInteraction, materialProperties } from "./control";
 
 export default class MPM {
   constructor() {
@@ -31,11 +31,11 @@ export default class MPM {
       }
     });
 
-    this.particleToGrid = ti.classKernel(this, () => {
+    this.particleToGrid = ti.classKernel(this, { bulkModulus: ti.f32 }, (bulkModulus) => {
       for (let p of ti.range(this.material[0].n_particles)) {
         let base = ti.i32(this.material[0].x[p] * this.grid.inv_dx - 0.5);
         let fx = this.material[0].x[p] * this.grid.inv_dx - ti.f32(base);
-        let stress = this.material[0].computeStress(p);
+        let stress = this.material[0].computeStress(p, bulkModulus);
         let affine =
           -this.dt * this.material[0].p_vol * 4 * this.grid.inv_dx * this.grid.inv_dx * stress +
           this.material[0].p_mass * this.material[0].C[p];
@@ -122,7 +122,7 @@ export default class MPM {
   async run() {
     for (let i = 0; i < this.n_substeps; ++i) {
       this.clearGridState();
-      this.particleToGrid();
+      this.particleToGrid(materialProperties.getValue("bulkModulus"));
       this.updateGridVelocity(userInteraction.mousePosition, userInteraction.clickStrength);
       this.gridToParticle();
     }

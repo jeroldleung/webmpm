@@ -1,7 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-function Slider({ item }) {
+function Slider({ item, materialProperties }) {
   const [currentVal, setCurrentVal] = useState(item.defaultVal);
+
+  const catchValue = () => {
+    materialProperties.setValue(item.id, Number(currentVal));
+  };
+
+  useEffect(() => {
+    catchValue();
+    document.getElementById(item.id).addEventListener("change", catchValue);
+  });
+
   return (
     <div className="relative">
       <label className="py-1 text-stone-400 text-sm">
@@ -21,8 +31,10 @@ function Slider({ item }) {
   );
 }
 
-export default function ParameterSlider({ options }) {
-  const items = options.map((single_item) => <Slider item={single_item} />);
+export default function ParameterSlider({ options, materialProperties }) {
+  const items = options.map((single_item) => (
+    <Slider item={single_item} materialProperties={materialProperties} />
+  ));
   return (
     <div className="flex flex-col gap-1 sm:w-56">
       <p className="font-bold text-lg">PARAMETERS</p>

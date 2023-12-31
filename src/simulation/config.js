@@ -40,7 +40,7 @@ export const CONTROL_ITEMS = [
 export const PARAMETER_ITEMS = [
   {
     name: "Young's modulus",
-    id: "E",
+    id: "youngsModulus",
     minVal: 1000,
     maxVal: 9000,
     stepVal: 1000,
@@ -48,9 +48,9 @@ export const PARAMETER_ITEMS = [
   },
   {
     name: "Bulk modulus",
-    id: "bulk_modulus",
-    minVal: 0,
-    maxVal: 1000,
+    id: "bulkModulus",
+    minVal: 100,
+    maxVal: 1100,
     stepVal: 100,
     defaultVal: 800,
   },

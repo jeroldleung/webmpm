@@ -12,10 +12,6 @@ export default class Material {
     this.C = ti.Matrix.field(2, 2, ti.f32, [this.n_particles]); // affine velocity
     this.F = ti.Matrix.field(2, 2, ti.f32, this.n_particles); // deformation gradient
     this.J = ti.field(ti.f32, [this.n_particles]); // plastic deformation
-    this.E = Number(document.getElementById("E").value); // Young's modulus
-    this.nu = 0.2; // Poisson's ratio
-    this.mu_0 = this.E / (2 * (1 + this.nu)); // Lame parameters
-    this.lambda_0 = (this.E * this.nu) / ((1 + this.nu) * (1 - 2 * this.nu)); // Lame parameters
     this.type = ti.field(ti.i32, [this.n_particles]); // material type
     this.color = color; // material color
     this.center = center;
@@ -37,9 +33,9 @@ export default class Material {
     });
   }
 
-  computeStress = ti.func((p) => {
+  computeStress = ti.func((p, bulkModulus) => {
     let Jp = this.material[0].J[p];
-    let pressure = 1e3 * (1 - Jp);
+    let pressure = bulkModulus * (1 - Jp);
     let stress =
       -pressure *
       [
