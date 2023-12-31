@@ -7,7 +7,6 @@ export default class MPM {
     this.material = [];
     this.grid = new Grid();
     this.dt = 0.0001;
-    this.n_substeps = 25;
   }
 
   quadraticKernel = ti.func((x) => {
@@ -120,7 +119,7 @@ export default class MPM {
   }
 
   async run() {
-    for (let i = 0; i < this.n_substeps; ++i) {
+    for (let i = 0; i < parameterControl.getValue("n_substeps"); ++i) {
       this.clearGridState();
       this.particleToGrid(parameterControl.getValue("bulkModulus"));
       this.updateGridVelocity(userInteraction.mousePosition, userInteraction.clickStrength);

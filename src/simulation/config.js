@@ -21,6 +21,14 @@ export const CONTROL_ITEMS = [
 
 export const PARAMETER_ITEMS = [
   {
+    name: "Substeps",
+    id: "n_substeps",
+    minVal: 1,
+    maxVal: 30,
+    stepVal: 1,
+    defaultVal: 25,
+  },
+  {
     name: "Young's modulus",
     id: "youngsModulus",
     minVal: 1000,
