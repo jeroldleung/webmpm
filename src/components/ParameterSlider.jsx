@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
-function Slider({ item, materialProperties }) {
+function Slider({ item, parameterControl }) {
   const [currentVal, setCurrentVal] = useState(item.defaultVal);
 
   const catchValue = () => {
-    materialProperties.setValue(item.id, Number(currentVal));
+    parameterControl.setValue(item.id, Number(currentVal));
   };
 
   useEffect(() => {
@@ -31,9 +31,9 @@ function Slider({ item, materialProperties }) {
   );
 }
 
-export default function ParameterSlider({ options, materialProperties }) {
+export default function ParameterSlider({ options, parameterControl }) {
   const items = options.map((single_item) => (
-    <Slider item={single_item} materialProperties={materialProperties} />
+    <Slider item={single_item} parameterControl={parameterControl} />
   ));
   return (
     <div className="flex flex-col gap-1 sm:w-56">

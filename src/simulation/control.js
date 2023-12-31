@@ -25,12 +25,12 @@ export const userInteraction = {
   },
 };
 
-export const materialProperties = {
-  propertyValues: {},
+export const parameterControl = {
+  parameterValues: {},
   setValue: function (which, value) {
-    this.propertyValues[which] = value;
+    this.parameterValues[which] = value;
   },
   getValue: function (which) {
-    return this.propertyValues[which];
+    return this.parameterValues[which];
   },
 };

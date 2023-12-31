@@ -1,13 +1,13 @@
 import * as ti from "taichi.js";
 import Grid from "./grid";
-import { userInteraction, materialProperties } from "./control";
+import { userInteraction, parameterControl } from "./control";
 
 export default class MPM {
   constructor() {
     this.material = [];
     this.grid = new Grid();
-    this.dt = Number(document.getElementById("dt").value);
-    this.n_substeps = Number(document.getElementById("n_substeps").value);
+    this.dt = 0.0001;
+    this.n_substeps = 25;
   }
 
   quadraticKernel = ti.func((x) => {
@@ -122,7 +122,7 @@ export default class MPM {
   async run() {
     for (let i = 0; i < this.n_substeps; ++i) {
       this.clearGridState();
-      this.particleToGrid(materialProperties.getValue("bulkModulus"));
+      this.particleToGrid(parameterControl.getValue("bulkModulus"));
       this.updateGridVelocity(userInteraction.mousePosition, userInteraction.clickStrength);
       this.gridToParticle();
     }
