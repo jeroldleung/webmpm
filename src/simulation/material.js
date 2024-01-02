@@ -1,20 +1,20 @@
 import * as ti from "taichi.js";
 
 export default class Material {
-  constructor(scale, center, color) {
+  constructor(type, scale, center, color) {
     this.p_vol = parseFloat(document.getElementById("p_vol").value); // particle volume
     this.p_rho = 1; // particle density
     this.p_mass = this.p_vol * this.p_rho; // particle mass
     this.scale = scale; // object scale
     this.n_particles = Math.floor(this.scale ** 2 / this.p_vol); // number of particles
-    this.x = ti.Vector.field(2, ti.f32, [this.n_particles]); // position
-    this.v = ti.Vector.field(2, ti.f32, [this.n_particles]); // velocity
-    this.C = ti.Matrix.field(2, 2, ti.f32, [this.n_particles]); // affine velocity
+    this.x = ti.Vector.field(2, ti.f32, this.n_particles); // position
+    this.v = ti.Vector.field(2, ti.f32, this.n_particles); // velocity
+    this.C = ti.Matrix.field(2, 2, ti.f32, this.n_particles); // affine velocity
     this.F = ti.Matrix.field(2, 2, ti.f32, this.n_particles); // deformation gradient
-    this.J = ti.field(ti.f32, [this.n_particles]); // plastic deformation
-    this.type = ti.field(ti.i32, [this.n_particles]); // material type
+    this.J = ti.field(ti.f32, this.n_particles); // plastic deformation
+    this.type = type; // material type
     this.color = color; // material color
-    this.center = center;
+    this.center = center; // material initial position
 
     this.init = ti.classKernel(this, () => {
       for (let i of ti.range(this.n_particles)) {
@@ -32,16 +32,4 @@ export default class Material {
       }
     });
   }
-
-  computeStress = ti.func((p, bulkModulus) => {
-    let Jp = this.material[0].J[p];
-    let pressure = bulkModulus * (1 - Jp);
-    let stress =
-      -pressure *
-      [
-        [1.0, 0.0],
-        [0.0, 1.0],
-      ];
-    return stress;
-  });
 }

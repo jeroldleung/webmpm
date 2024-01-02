@@ -20,37 +20,46 @@ export default class MPM {
     return res;
   });
 
+  computeStress = ti.func((material, p, bulkModulus) => {
+    let Jp = material.J[p];
+    let pressure = bulkModulus * (1 - Jp);
+    let stress =
+      -pressure *
+      [
+        [1.0, 0.0],
+        [0.0, 1.0],
+      ];
+    return stress;
+  });
+
   async init(objects) {
     this.material = objects;
 
-    this.clearGridState = ti.classKernel(this, () => {
-      for (let I of ti.ndrange(this.grid.n_grid, this.grid.n_grid)) {
-        this.grid.grid_v[I] = [0, 0];
-        this.grid.grid_m[I] = 0;
-      }
-    });
-
-    this.particleToGrid = ti.classKernel(this, { bulkModulus: ti.f32 }, (bulkModulus) => {
-      for (let p of ti.range(this.material[0].n_particles)) {
-        let base = ti.i32(this.material[0].x[p] * this.grid.inv_dx - 0.5);
-        let fx = this.material[0].x[p] * this.grid.inv_dx - ti.f32(base);
-        let stress = this.material[0].computeStress(p, bulkModulus);
-        let affine =
-          -this.dt * this.material[0].p_vol * 4 * this.grid.inv_dx * this.grid.inv_dx * stress +
-          this.material[0].p_mass * this.material[0].C[p];
-        for (let i of ti.static(ti.range(3))) {
-          for (let j of ti.static(ti.range(3))) {
-            let offset = [i, j];
-            let dpos = (ti.f32(offset) - fx) * this.grid.dx;
-            let weight =
-              this.quadraticKernel((fx - offset)[0]) * this.quadraticKernel((fx - offset)[1]);
-            this.grid.grid_v[base + offset] +=
-              weight * (this.material[0].p_mass * this.material[0].v[p] + affine.matmul(dpos));
-            this.grid.grid_m[base + offset] += weight * this.material[0].p_mass;
+    this.particleToGrid = ti.classKernel(
+      this,
+      { material: ti.template(), grid: ti.template(), bulkModulus: ti.f32 },
+      (material, grid, bulkModulus) => {
+        for (let p of ti.range(material.n_particles)) {
+          let base = ti.i32(material.x[p] * grid.inv_dx - 0.5);
+          let fx = material.x[p] * grid.inv_dx - ti.f32(base);
+          let stress = this.computeStress(material, p, bulkModulus);
+          let affine =
+            -this.dt * material.p_vol * 4 * grid.inv_dx * grid.inv_dx * stress +
+            material.p_mass * material.C[p];
+          for (let i of ti.static(ti.range(3))) {
+            for (let j of ti.static(ti.range(3))) {
+              let offset = [i, j];
+              let dpos = (ti.f32(offset) - fx) * grid.dx;
+              let weight =
+                this.quadraticKernel((fx - offset)[0]) * this.quadraticKernel((fx - offset)[1]);
+              grid.grid_v[base + offset] +=
+                weight * (material.p_mass * material.v[p] + affine.matmul(dpos));
+              grid.grid_m[base + offset] += weight * material.p_mass;
+            }
           }
         }
-      }
-    });
+      },
+    );
 
     this.updateGridVelocity = ti.classKernel(
       this,
@@ -83,33 +92,36 @@ export default class MPM {
       },
     );
 
-    this.gridToParticle = ti.classKernel(this, () => {
-      for (let p of ti.range(this.material[0].n_particles)) {
-        let base = ti.i32(this.material[0].x[p] * this.grid.inv_dx - 0.5);
-        let fx = this.material[0].x[p] * this.grid.inv_dx - ti.f32(base);
-        let new_v = [0.0, 0.0];
-        let new_C = [
-          [0.0, 0.0],
-          [0.0, 0.0],
-        ];
-        for (let i of ti.static(ti.range(3))) {
-          for (let j of ti.static(ti.range(3))) {
-            let offset = [i, j];
-            let dpos = ti.f32(offset) - fx;
-            let g_v = this.grid.grid_v[base + offset];
-            let weight =
-              this.quadraticKernel((fx - offset)[0]) * this.quadraticKernel((fx - offset)[1]);
-            new_v = new_v + weight * g_v;
-            new_C = new_C + 4 * this.grid.inv_dx * weight * g_v.outerProduct(dpos);
+    this.gridToParticle = ti.classKernel(
+      this,
+      { material: ti.template(), grid: ti.template() },
+      (material, grid) => {
+        for (let p of ti.range(material.n_particles)) {
+          let base = ti.i32(material.x[p] * grid.inv_dx - 0.5);
+          let fx = material.x[p] * grid.inv_dx - ti.f32(base);
+          let new_v = [0.0, 0.0];
+          let new_C = [
+            [0.0, 0.0],
+            [0.0, 0.0],
+          ];
+          for (let i of ti.static(ti.range(3))) {
+            for (let j of ti.static(ti.range(3))) {
+              let offset = [i, j];
+              let dpos = ti.f32(offset) - fx;
+              let g_v = grid.grid_v[base + offset];
+              let weight =
+                this.quadraticKernel((fx - offset)[0]) * this.quadraticKernel((fx - offset)[1]);
+              new_v = new_v + weight * g_v;
+              new_C = new_C + 4 * grid.inv_dx * weight * g_v.outerProduct(dpos);
+            }
           }
+          material.v[p] = new_v;
+          material.C[p] = new_C;
+          material.x[p] = material.x[p] + this.dt * new_v;
+          material.J[p] = (1.0 + this.dt * (new_C[0][0] + new_C[1][1])) * material.J[p];
         }
-        this.material[0].v[p] = new_v;
-        this.material[0].C[p] = new_C;
-        this.material[0].x[p] = this.material[0].x[p] + this.dt * new_v;
-        this.material[0].J[p] =
-          (1.0 + this.dt * (new_C[0][0] + new_C[1][1])) * this.material[0].J[p];
-      }
-    });
+      },
+    );
   }
 
   async reset() {
@@ -120,10 +132,14 @@ export default class MPM {
 
   async run() {
     for (let i = 0; i < parameterControl.getValue("n_substeps"); ++i) {
-      this.clearGridState();
-      this.particleToGrid(parameterControl.getValue("bulkModulus"));
+      this.grid.clear();
+      for (let obj of this.material) {
+        this.particleToGrid(obj, this.grid, parameterControl.getValue("bulkModulus"));
+      }
       this.updateGridVelocity(userInteraction.mousePosition, userInteraction.clickStrength);
-      this.gridToParticle();
+      for (let obj of this.material) {
+        this.gridToParticle(obj, this.grid);
+      }
     }
   }
 }
