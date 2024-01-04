@@ -30,10 +30,10 @@ export const PARAMETER_ITEMS = [
   },
   {
     name: "Young's modulus",
-    id: "youngsModulus",
-    minVal: 1000,
-    maxVal: 5000,
-    stepVal: 500,
-    defaultVal: 3000,
+    id: "E",
+    minVal: 100,
+    maxVal: 2000,
+    stepVal: 100,
+    defaultVal: 1000,
   },
 ];

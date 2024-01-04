@@ -9,6 +9,10 @@ export default class MPM {
     this.dt = 0.0001;
   }
 
+  determinant = ti.func((mat) => {
+    return mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
+  });
+
   quadraticKernel = ti.func((x) => {
     x = Math.abs(x);
     let res = 0.0;
@@ -20,15 +24,48 @@ export default class MPM {
     return res;
   });
 
-  computeStress = ti.func((material, p, bulkModulus) => {
+  waterPressure = ti.func((material, p, E) => {
     let Jp = material.J[p];
-    let pressure = bulkModulus * (1 - Jp);
+    let pressure = E * (Jp - 1);
     let stress =
-      -pressure *
+      pressure *
       [
         [1.0, 0.0],
         [0.0, 1.0],
       ];
+    return stress;
+  });
+
+  fixedCorotated = ti.func((material, p, E) => {
+    let nu = 0.2; // Poisson's ratio
+    let mu = E / (2 * (1 + nu)); // Lame parameters
+    let la = (E * nu) / ((1 + nu) * (1 - 2 * nu)); // Lame parameters
+    let Jp = this.determinant(material.F[p]);
+    let svd = ti.svd2D(material.F[p]);
+    let stress =
+      (2 * mu * (material.F[p] - svd.U.matmul(svd.V.transpose()))).matmul(
+        material.F[p].transpose(),
+      ) +
+      [
+        [1.0, 0.0],
+        [0.0, 1.0],
+      ] *
+        la *
+        Jp *
+        (Jp - 1);
+    return stress;
+  });
+
+  computeStress = ti.func((material, p, E) => {
+    let stress = [
+      [1.0, 0.0],
+      [0.0, 1.0],
+    ];
+    if (material.type == 0) {
+      stress = this.waterPressure(material, p, E);
+    } else if (material.type == 1) {
+      stress = this.fixedCorotated(material, p, E);
+    }
     return stress;
   });
 
@@ -37,12 +74,12 @@ export default class MPM {
 
     this.particleToGrid = ti.classKernel(
       this,
-      { material: ti.template(), grid: ti.template(), bulkModulus: ti.f32 },
-      (material, grid, bulkModulus) => {
+      { material: ti.template(), grid: ti.template(), E: ti.f32 },
+      (material, grid, E) => {
         for (let p of ti.range(material.n_particles)) {
           let base = ti.i32(material.x[p] * grid.inv_dx - 0.5);
           let fx = material.x[p] * grid.inv_dx - ti.f32(base);
-          let stress = this.computeStress(material, p, bulkModulus);
+          let stress = this.computeStress(material, p, E);
           let affine =
             -this.dt * material.p_vol * 4 * grid.inv_dx * grid.inv_dx * stress +
             material.p_mass * material.C[p];
@@ -119,6 +156,13 @@ export default class MPM {
           material.C[p] = new_C;
           material.x[p] = material.x[p] + this.dt * new_v;
           material.J[p] = (1.0 + this.dt * (new_C[0][0] + new_C[1][1])) * material.J[p];
+          material.F[p] = (
+            [
+              [1.0, 0.0],
+              [0.0, 1.0],
+            ] +
+            this.dt * material.C[p]
+          ).matmul(material.F[p]);
         }
       },
     );
@@ -134,7 +178,7 @@ export default class MPM {
     for (let i = 0; i < parameterControl.getValue("n_substeps"); ++i) {
       this.grid.clear();
       for (let obj of this.material) {
-        this.particleToGrid(obj, this.grid, parameterControl.getValue("bulkModulus"));
+        this.particleToGrid(obj, this.grid, parameterControl.getValue("E"));
       }
       this.updateGridVelocity(userInteraction.mousePosition, userInteraction.clickStrength);
       for (let obj of this.material) {

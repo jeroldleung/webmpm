@@ -1,5 +1,8 @@
 import * as ti from "taichi.js";
 
+// material type 0: water
+// material type 1: jelly
+
 export default class Material {
   constructor(type, scale, center, color) {
     this.p_vol = parseFloat(document.getElementById("p_vol").value); // particle volume
