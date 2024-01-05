@@ -15,6 +15,10 @@ export default class Scene {
         this.objects.push(new Material(1, 0.2, [0.3, 0.4], [0.97, 0.44, 0.44, 1.0]));
         this.objects.push(new Material(1, 0.2, [0.6, 0.4], [0.97, 0.44, 0.44, 1.0]));
         break;
+      case "Fluid-Solid Coupling":
+        this.objects.push(new Material(0, 0.4, [0.1, 0.1], [0.06, 0.46, 0.43, 1.0]));
+        this.objects.push(new Material(1, 0.2, [0.6, 0.3], [0.97, 0.44, 0.44, 1.0]));
+        break;
     }
   }
 }

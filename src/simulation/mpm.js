@@ -26,6 +26,7 @@ export default class MPM {
 
   waterPressure = ti.func((material, p, E) => {
     let Jp = material.J[p];
+    E = (E / 2000) * 900;
     let pressure = E * (Jp - 1);
     let stress =
       pressure *

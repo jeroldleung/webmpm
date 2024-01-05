@@ -2,8 +2,8 @@ export const CONTROL_ITEMS = [
   {
     name: "Scenes",
     id: "scenes",
-    defaultValue: "Jelly Cubes",
-    values: ["Water Dam Break", "Jelly Cubes"],
+    defaultValue: "Fluid-Solid Coupling",
+    values: ["Water Dam Break", "Jelly Cubes", "Fluid-Solid Coupling"],
   },
   {
     name: "Particle Volume",
