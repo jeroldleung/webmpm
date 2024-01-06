@@ -101,29 +101,29 @@ export default class MPM {
 
     this.updateGridVelocity = ti.classKernel(
       this,
-      { mouse_position: ti.types.vector(ti.f32, 2), click_strength: ti.f32 },
-      (mouse_position, click_strength) => {
-        for (let I of ti.ndrange(this.grid.n_grid, this.grid.n_grid)) {
+      { grid: ti.template(), mouse_position: ti.types.vector(ti.f32, 2), click_strength: ti.f32 },
+      (grid, mouse_position, click_strength) => {
+        for (let I of ti.ndrange(grid.n_grid, grid.n_grid)) {
           let i = I[0];
           let j = I[1];
-          if (this.grid.grid_m[I] > 0) {
-            this.grid.grid_v[I] = (1 / this.grid.grid_m[I]) * this.grid.grid_v[I];
-            this.grid.grid_v[I][1] -= this.dt * 50; // gravity
+          if (grid.grid_m[I] > 0) {
+            grid.grid_v[I] = (1 / grid.grid_m[I]) * grid.grid_v[I];
+            grid.grid_v[I][1] -= this.dt * 50; // gravity
             // handle user click interaction
-            let dist = this.grid.dx * I - mouse_position;
-            this.grid.grid_v[I] += (dist / (0.01 + ti.norm(dist))) * this.dt * click_strength;
+            let dist = grid.dx * I - mouse_position;
+            grid.grid_v[I] += (dist / (0.01 + ti.norm(dist))) * this.dt * click_strength;
             // boundary handle
-            if (i < 3 && this.grid.grid_v[I][0] < 0) {
-              this.grid.grid_v[I][0] = 0;
+            if (i < 3 && grid.grid_v[I][0] < 0) {
+              grid.grid_v[I][0] = 0;
             }
-            if (i > this.grid.n_grid - 3 && this.grid.grid_v[I][0] > 0) {
-              this.grid.grid_v[I][0] = 0;
+            if (i > grid.n_grid - 3 && grid.grid_v[I][0] > 0) {
+              grid.grid_v[I][0] = 0;
             }
-            if (j < 3 && this.grid.grid_v[I][1] < 0) {
-              this.grid.grid_v[I][1] = 0;
+            if (j < 3 && grid.grid_v[I][1] < 0) {
+              grid.grid_v[I][1] = 0;
             }
-            if (j > this.grid.n_grid - 3 && this.grid.grid_v[I][1] > 0) {
-              this.grid.grid_v[I][1] = 0;
+            if (j > grid.n_grid - 3 && grid.grid_v[I][1] > 0) {
+              grid.grid_v[I][1] = 0;
             }
           }
         }
@@ -181,7 +181,11 @@ export default class MPM {
       for (let obj of this.material) {
         this.particleToGrid(obj, this.grid, parameterControl.getValue("E"));
       }
-      this.updateGridVelocity(userInteraction.mousePosition, userInteraction.clickStrength);
+      this.updateGridVelocity(
+        this.grid,
+        userInteraction.mousePosition,
+        userInteraction.clickStrength,
+      );
       for (let obj of this.material) {
         this.gridToParticle(obj, this.grid);
       }
