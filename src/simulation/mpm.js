@@ -5,7 +5,7 @@ import { userInteraction, parameterControl } from "./control";
 export default class MPM {
   constructor() {
     this.material = [];
-    this.grid = new Grid();
+    this.grid = [];
     this.dt = 0.0001;
   }
 
@@ -72,6 +72,7 @@ export default class MPM {
 
   async init(objects) {
     this.material = objects;
+    this.grid.push(new Grid());
 
     this.clearData = ti.classKernel(this, { grid: ti.template() }, (grid) => {
       for (let I of ti.ndrange(grid.n_grid, grid.n_grid)) {
@@ -184,17 +185,17 @@ export default class MPM {
 
   async run() {
     for (let i = 0; i < parameterControl.getValue("n_substeps"); ++i) {
-      this.clearData(this.grid);
+      this.clearData(this.grid[0]);
       for (let obj of this.material) {
-        this.particleToGrid(obj, this.grid, parameterControl.getValue("E"));
+        this.particleToGrid(obj, this.grid[0], parameterControl.getValue("E"));
       }
       this.updateGridVelocity(
-        this.grid,
+        this.grid[0],
         userInteraction.mousePosition,
         userInteraction.clickStrength,
       );
       for (let obj of this.material) {
-        this.gridToParticle(obj, this.grid);
+        this.gridToParticle(obj, this.grid[0]);
       }
     }
   }
