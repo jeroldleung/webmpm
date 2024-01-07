@@ -73,6 +73,13 @@ export default class MPM {
   async init(objects) {
     this.material = objects;
 
+    this.clearData = ti.classKernel(this, { grid: ti.template() }, (grid) => {
+      for (let I of ti.ndrange(grid.n_grid, grid.n_grid)) {
+        grid.grid_v[I] = [0, 0];
+        grid.grid_m[I] = 0;
+      }
+    });
+
     this.particleToGrid = ti.classKernel(
       this,
       { material: ti.template(), grid: ti.template(), E: ti.f32 },
@@ -177,7 +184,7 @@ export default class MPM {
 
   async run() {
     for (let i = 0; i < parameterControl.getValue("n_substeps"); ++i) {
-      this.grid.clear();
+      this.clearData(this.grid);
       for (let obj of this.material) {
         this.particleToGrid(obj, this.grid, parameterControl.getValue("E"));
       }
