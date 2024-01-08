@@ -44,7 +44,7 @@ export default function App() {
       };
 
       scene.create();
-      await mpm.init(scene.objects);
+      await mpm.init(scene);
       mpm.reset();
       await frame();
     };

@@ -96,11 +96,16 @@ export default class MPM {
     }
   });
 
-  async init(objects) {
-    this.material = objects;
+  async init(scene) {
+    this.material = scene.objects;
     this.grid.push(new Grid());
+
     for (let i = 0; i < this.material.length; i++) {
       this.mappingGrid[i] = 0;
+      if (i > 0 && scene.scene == "Non-Sticky Fluid-Solid Coupling") {
+        this.grid.push(new Grid());
+        this.mappingGrid[i] = i;
+      }
     }
 
     this.clearData = ti.classKernel(this, () => {
