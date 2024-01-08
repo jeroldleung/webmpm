@@ -76,6 +76,7 @@ export default class MPM {
     let j = I[1];
     if (grid.grid_m[I] > 0) {
       grid.grid_v[I] = (1 / grid.grid_m[I]) * grid.grid_v[I];
+      grid.grid_n[I] = ti.normalized(grid.grid_n[I]);
       grid.grid_v[I][1] -= this.dt * 50; // gravity
       // user click interaction
       let dist = grid.dx * I - mouse_position;
@@ -112,6 +113,7 @@ export default class MPM {
       for (let I of ti.ndrange(this.grid[0].n_grid, this.grid[0].n_grid)) {
         for (let k of ti.static(ti.range(this.grid.length))) {
           this.grid[k].grid_v[I] = [0, 0];
+          this.grid[k].grid_n[I] = [0, 0];
           this.grid[k].grid_m[I] = 0;
         }
       }
@@ -137,6 +139,7 @@ export default class MPM {
               grid.grid_v[base + offset] +=
                 weight * (material.p_mass * material.v[p] + affine.matmul(dpos));
               grid.grid_m[base + offset] += weight * material.p_mass;
+              grid.grid_n[base + offset] += weight * material.p_mass * (ti.f32(offset) - fx);
             }
           }
         }
@@ -150,6 +153,29 @@ export default class MPM {
         for (let I of ti.ndrange(this.grid[0].n_grid, this.grid[0].n_grid)) {
           for (let k of ti.static(ti.range(this.grid.length))) {
             this.singleGridUpdate(this.grid[k], I, mouse_position, click_strength);
+          }
+          // non-sticky coupling
+          if (ti.static(this.grid.length > 1)) {
+            let m1 = this.grid[0].grid_m[I];
+            let m2 = this.grid[1].grid_m[I];
+            if (m1 > 0.0 && m2 > 0.0) {
+              let v1 = this.grid[0].grid_v[I];
+              let v2 = this.grid[1].grid_v[I];
+              let ni = ti.normalized(this.grid[0].grid_n[I] - this.grid[1].grid_n[I]); // grid normal
+              let vir = v1 - v2; // grid responsed velocity
+              if (ti.dot(vir, ni) > 0.0) {
+                let v1n = ti.dot(v1, ni) * ni;
+                let v2n = ti.dot(v2, ni) * ni;
+                let v1t = v1 - v1n;
+                let v2t = v2 - v2n;
+                let slide = ti.max((m2 - m1) / (m1 + m2), 0.0); // adaptive sliding fractor
+                let vi = (m1 * v1 + m2 * v2) / (m1 + m2);
+                let v1t_new = (slide * m2 * (v1t - v2t)) / (m1 + m2);
+                let v2t_new = (slide * m1 * (v2t - v1t)) / (m1 + m2);
+                this.grid[0].grid_v[I] = vi + v1t_new;
+                this.grid[1].grid_v[I] = vi + v2t_new;
+              }
+            }
           }
         }
       },
