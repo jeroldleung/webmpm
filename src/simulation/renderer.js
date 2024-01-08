@@ -23,9 +23,9 @@ export default class Renderer {
 
   async render(scene) {
     this.clear();
-    for (let obj of scene.objects) {
-      await this.draw(obj);
-    }
+    scene.objects.forEach((element) => {
+      this.draw(element);
+    });
     this.canvas.setImage(this.image);
   }
 }

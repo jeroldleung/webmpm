@@ -39,7 +39,7 @@ export default function App() {
       let frame = async () => {
         if (returnFromMain) return;
         simulationControl.run();
-        await renderer.render(scene);
+        renderer.render(scene);
         requestAnimationFrame(frame);
       };
 
