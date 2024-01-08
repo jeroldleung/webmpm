@@ -71,6 +71,31 @@ export default class MPM {
     return stress;
   });
 
+  singleGridUpdate = ti.func((grid, I, mouse_position, click_strength) => {
+    let i = I[0];
+    let j = I[1];
+    if (grid.grid_m[I] > 0) {
+      grid.grid_v[I] = (1 / grid.grid_m[I]) * grid.grid_v[I];
+      grid.grid_v[I][1] -= this.dt * 50; // gravity
+      // user click interaction
+      let dist = grid.dx * I - mouse_position;
+      grid.grid_v[I] += (dist / (0.01 + ti.norm(dist))) * this.dt * click_strength;
+      // boundary handle
+      if (i < 3 && grid.grid_v[I][0] < 0) {
+        grid.grid_v[I][0] = 0;
+      }
+      if (i > grid.n_grid - 3 && grid.grid_v[I][0] > 0) {
+        grid.grid_v[I][0] = 0;
+      }
+      if (j < 3 && grid.grid_v[I][1] < 0) {
+        grid.grid_v[I][1] = 0;
+      }
+      if (j > grid.n_grid - 3 && grid.grid_v[I][1] > 0) {
+        grid.grid_v[I][1] = 0;
+      }
+    }
+  });
+
   async init(objects) {
     this.material = objects;
     this.grid.push(new Grid());
@@ -78,10 +103,12 @@ export default class MPM {
       this.mappingGrid[i] = 0;
     }
 
-    this.clearData = ti.classKernel(this, { grid: ti.template() }, (grid) => {
-      for (let I of ti.ndrange(grid.n_grid, grid.n_grid)) {
-        grid.grid_v[I] = [0, 0];
-        grid.grid_m[I] = 0;
+    this.clearData = ti.classKernel(this, () => {
+      for (let I of ti.ndrange(this.grid[0].n_grid, this.grid[0].n_grid)) {
+        for (let k of ti.static(ti.range(this.grid.length))) {
+          this.grid[k].grid_v[I] = [0, 0];
+          this.grid[k].grid_m[I] = 0;
+        }
       }
     });
 
@@ -113,30 +140,11 @@ export default class MPM {
 
     this.updateGridVelocity = ti.classKernel(
       this,
-      { grid: ti.template(), mouse_position: ti.types.vector(ti.f32, 2), click_strength: ti.f32 },
-      (grid, mouse_position, click_strength) => {
-        for (let I of ti.ndrange(grid.n_grid, grid.n_grid)) {
-          let i = I[0];
-          let j = I[1];
-          if (grid.grid_m[I] > 0) {
-            grid.grid_v[I] = (1 / grid.grid_m[I]) * grid.grid_v[I];
-            grid.grid_v[I][1] -= this.dt * 50; // gravity
-            // handle user click interaction
-            let dist = grid.dx * I - mouse_position;
-            grid.grid_v[I] += (dist / (0.01 + ti.norm(dist))) * this.dt * click_strength;
-            // boundary handle
-            if (i < 3 && grid.grid_v[I][0] < 0) {
-              grid.grid_v[I][0] = 0;
-            }
-            if (i > grid.n_grid - 3 && grid.grid_v[I][0] > 0) {
-              grid.grid_v[I][0] = 0;
-            }
-            if (j < 3 && grid.grid_v[I][1] < 0) {
-              grid.grid_v[I][1] = 0;
-            }
-            if (j > grid.n_grid - 3 && grid.grid_v[I][1] > 0) {
-              grid.grid_v[I][1] = 0;
-            }
+      { mouse_position: ti.types.vector(ti.f32, 2), click_strength: ti.f32 },
+      (mouse_position, click_strength) => {
+        for (let I of ti.ndrange(this.grid[0].n_grid, this.grid[0].n_grid)) {
+          for (let k of ti.static(ti.range(this.grid.length))) {
+            this.singleGridUpdate(this.grid[k], I, mouse_position, click_strength);
           }
         }
       },
@@ -189,22 +197,18 @@ export default class MPM {
 
   async run() {
     for (let step = 0; step < parameterControl.getValue("n_substeps"); ++step) {
-      this.clearData(this.grid[0]);
-      for (let i = 0; i < this.material.length; i++) {
+      this.clearData();
+      this.material.forEach((element, index) => {
         this.particleToGrid(
-          this.material[i],
-          this.grid[this.mappingGrid[i]],
+          element,
+          this.grid[this.mappingGrid[index]],
           parameterControl.getValue("E"),
         );
-      }
-      this.updateGridVelocity(
-        this.grid[0],
-        userInteraction.mousePosition,
-        userInteraction.clickStrength,
-      );
-      for (let i = 0; i < this.material.length; i++) {
-        this.gridToParticle(this.material[i], this.grid[this.mappingGrid[i]]);
-      }
+      });
+      this.updateGridVelocity(userInteraction.mousePosition, userInteraction.clickStrength);
+      this.material.forEach((element, index) => {
+        this.gridToParticle(element, this.grid[this.mappingGrid[index]]);
+      });
     }
   }
 }
