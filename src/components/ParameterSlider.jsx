@@ -1,18 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const parameterItems = [
-  {
-    name: "Young's modulus",
-    id: "E",
-    minVal: 1000,
-    maxVal: 9000,
-    stepVal: 1000,
-    defaultVal: 5000,
-  },
-];
-
-function Slider({ item }) {
+function Slider({ item, parameterControl }) {
   const [currentVal, setCurrentVal] = useState(item.defaultVal);
+
+  const catchValue = () => {
+    parameterControl.setValue(item.id, Number(currentVal));
+  };
+
+  useEffect(() => {
+    catchValue();
+    document.getElementById(item.id).addEventListener("change", catchValue);
+  });
+
   return (
     <div className="relative">
       <label className="py-1 text-stone-400 text-sm">
@@ -32,8 +31,10 @@ function Slider({ item }) {
   );
 }
 
-export default function MaterialParameters() {
-  const items = parameterItems.map((item) => <Slider item={item} />);
+export default function ParameterSlider({ options, parameterControl }) {
+  const items = options.map((single_item) => (
+    <Slider item={single_item} parameterControl={parameterControl} />
+  ));
   return (
     <div className="flex flex-col gap-1 sm:w-56">
       <p className="font-bold text-lg">PARAMETERS</p>
