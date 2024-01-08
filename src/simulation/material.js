@@ -4,9 +4,9 @@ import * as ti from "taichi.js";
 // material type 1: jelly
 
 export default class Material {
-  constructor(type, group, scale, center, color) {
+  constructor(type, group, scale, density, center, color) {
     this.p_vol = parseFloat(document.getElementById("p_vol").value); // particle volume
-    this.p_rho = 1; // particle density
+    this.p_rho = density; // particle density
     this.p_mass = this.p_vol * this.p_rho; // particle mass
     this.scale = scale; // object scale
     this.group = group; // number of objects
