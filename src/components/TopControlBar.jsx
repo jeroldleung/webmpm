@@ -32,6 +32,7 @@ export default function TopControlBar({ simulationControl }) {
           onClick={() => {
             changeState("stop");
           }}
+          className="focus:outline-none"
         >
           <StopIcon size="w-10 h-10" />
         </button>
@@ -39,6 +40,7 @@ export default function TopControlBar({ simulationControl }) {
           onClick={() => {
             state == "play" ? changeState("pause") : changeState("play");
           }}
+          className="focus:outline-none"
         >
           {state == "play" ? <PauseIcon size="w-20 h-20" /> : <PlayIcon size="w-20 h-20" />}
         </button>
@@ -46,6 +48,7 @@ export default function TopControlBar({ simulationControl }) {
           onClick={() => {
             changeState("forward");
           }}
+          className="focus:outline-none"
         >
           <ForwardIcon size="w-10 h-10" />
         </button>
