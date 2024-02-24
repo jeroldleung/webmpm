@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StopIcon, PlayIcon, PauseIcon, ForwardIcon } from "./Icons.jsx";
 
 export default function TopControlBar({ simulationControl }) {
@@ -7,6 +7,24 @@ export default function TopControlBar({ simulationControl }) {
     simulationControl.changeState(value);
     setState(value);
   }
+
+  useEffect(() => {
+    function handlepress(e) {
+      if (e.key == "r") {
+        changeState("stop");
+      } else if (e.key == " ") {
+        e.preventDefault();
+        state == "play" ? changeState("pause") : changeState("play");
+      } else if (e.key == "ArrowRight") {
+        changeState("forward");
+      }
+    }
+    window.addEventListener("keydown", handlepress);
+    return () => {
+      window.removeEventListener("keydown", handlepress);
+    };
+  });
+
   return (
     <div className="bg-gray-50 shadow py-4">
       <div className="flex items-center place-content-center gap-1">
@@ -14,6 +32,7 @@ export default function TopControlBar({ simulationControl }) {
           onClick={() => {
             changeState("stop");
           }}
+          className="focus:outline-none"
         >
           <StopIcon size="w-10 h-10" />
         </button>
@@ -21,6 +40,7 @@ export default function TopControlBar({ simulationControl }) {
           onClick={() => {
             state == "play" ? changeState("pause") : changeState("play");
           }}
+          className="focus:outline-none"
         >
           {state == "play" ? <PauseIcon size="w-20 h-20" /> : <PlayIcon size="w-20 h-20" />}
         </button>
@@ -28,6 +48,7 @@ export default function TopControlBar({ simulationControl }) {
           onClick={() => {
             changeState("forward");
           }}
+          className="focus:outline-none"
         >
           <ForwardIcon size="w-10 h-10" />
         </button>
