@@ -168,11 +168,10 @@ export default class MPM {
                 let v2n = ti.dot(v2, ni) * ni;
                 let v1t = v1 - v1n;
                 let v2t = v2 - v2n;
-                let slide = ti.max((m2 - m1) / (m1 + m2), 0.0); // adaptive sliding fractor
+                let slide = ti.min(m2 / m1, 1.0); // adaptive sliding fractor
                 let vi = (m1 * v1 + m2 * v2) / (m1 + m2);
-                let v1t_new = (slide * m2 * (v1t - v2t)) / (m1 + m2);
                 let v2t_new = (slide * m1 * (v2t - v1t)) / (m1 + m2);
-                this.grid[0].grid_v[I] = vi + v1t_new;
+                this.grid[0].grid_v[I] = vi;
                 this.grid[1].grid_v[I] = vi + v2t_new;
               }
             }
