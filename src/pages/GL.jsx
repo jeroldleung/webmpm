@@ -1,10 +1,14 @@
 import { useEffect } from "react";
+import Loader from "../scripts/Loader.js";
+import { vsSource } from "../shaders/point.vert.js";
+import { fsSource } from "../shaders/point.frag.js";
 
 export default function GL() {
   useEffect(() => {
-    const gl = document.getElementById("glcanvas").getContext("webgl");
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    let webgl = new Loader(document.getElementById("glcanvas"));
+    webgl.initShaderProgram(vsSource, fsSource);
+    webgl.initBuffers();
+    webgl.drawScene();
   });
   return (
     <div>
