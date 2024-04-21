@@ -5,7 +5,8 @@ export default class Loader {
       alert("Unable to initialize WebGL. Your browser may not support it.");
       throw new Error("WebGL not available");
     }
-    this.shaderProgram = null;
+    this.shaderPrograms = {};
+    this.programAttributes = {};
   }
 
   loadShader(type, source) {
@@ -14,7 +15,7 @@ export default class Loader {
     this.gl.compileShader(shader);
 
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-      alert("An error occurred compiling the shaders: " + this.gl.getShaderInfoLog(shader));
+      console.log("An error occurred compiling the shaders: " + this.gl.getShaderInfoLog(shader));
       this.gl.deleteShader(shader);
       return null;
     }
@@ -32,15 +33,25 @@ export default class Loader {
     this.gl.linkProgram(shaderProgram);
 
     if (!this.gl.getProgramParameter(shaderProgram, this.gl.LINK_STATUS)) {
-      alert("Unable to initialize the shader program: " + this.gl.getProgramInfoLog(shaderProgram));
+      console.log(
+        "Unable to initialize the shader program: " + this.gl.getProgramInfoLog(shaderProgram),
+      );
       return null;
     }
 
-    this.gl.useProgram(shaderProgram);
-    this.shaderProgram = shaderProgram;
+    return shaderProgram;
   }
 
-  initBuffers() {
+  createPrograms(programeParameters) {
+    for (let name in programeParameters) {
+      const vs = programeParameters[name].vertexShader;
+      const fs = programeParameters[name].fragmentShader;
+      this.shaderPrograms[name] = this.initShaderProgram(vs, fs);
+      this.programAttributes[name] = programeParameters[name].attributes;
+    }
+  }
+
+  createBuffers() {
     const positionBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
 
@@ -60,10 +71,16 @@ export default class Loader {
     ];
 
     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
+  }
 
-    let positionAttributeLocation = this.gl.getAttribLocation(this.shaderProgram, "a_position");
-    this.gl.enableVertexAttribArray(positionAttributeLocation);
-    this.gl.vertexAttribPointer(positionAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
+  useProgram(which) {
+    const shaderProgram = this.shaderPrograms[which];
+    const attributeName = this.programAttributes[which];
+
+    this.gl.useProgram(shaderProgram);
+    let attributeLocation = this.gl.getAttribLocation(shaderProgram, attributeName);
+    this.gl.enableVertexAttribArray(attributeLocation);
+    this.gl.vertexAttribPointer(attributeLocation, 2, this.gl.FLOAT, false, 0, 0);
   }
 
   drawScene() {
