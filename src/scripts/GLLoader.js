@@ -1,12 +1,13 @@
-export default class Loader {
+export default class GLLoader {
   constructor(canvas) {
     this.gl = canvas.getContext("webgl");
     if (!this.gl) {
       alert("Unable to initialize WebGL. Your browser may not support it.");
       throw new Error("WebGL not available");
     }
+    this.gl.getExtension("OES_texture_float"); // for type of gl.FLOAT in texImage2d()
     this.shaderPrograms = {};
-    this.programAttributes = {};
+    this.currentProgram = null;
   }
 
   loadShader(type, source) {
@@ -47,45 +48,62 @@ export default class Loader {
       const vs = programeParameters[name].vertexShader;
       const fs = programeParameters[name].fragmentShader;
       this.shaderPrograms[name] = this.initShaderProgram(vs, fs);
-      this.programAttributes[name] = programeParameters[name].attributes;
     }
   }
 
-  createBuffers() {
-    const positionBuffer = this.gl.createBuffer();
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-
-    const vertices = [
-      -0.5,
-      0.5, // Vertex 1 (X, Y)
-      -0.5,
-      -0.5, // Vertex 2 (X, Y)
-      0.5,
-      -0.5, // Vertex 3 (X, Y)
-      -0.5,
-      0.5, // Vertex 4 (X, Y)
-      0.5,
-      -0.5, // Vertex 5 (X, Y)
-      0.5,
-      0.5, // Vertex 6 (X, Y)
-    ];
-
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
+  createTexture(width, height) {
+    const texture = this.gl.createTexture();
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D,
+      0,
+      this.gl.RGBA,
+      width,
+      height,
+      0,
+      this.gl.RGBA,
+      this.gl.FLOAT,
+      null,
+    );
+    return texture;
   }
 
-  useProgram(which) {
-    const shaderProgram = this.shaderPrograms[which];
-    const attributeName = this.programAttributes[which];
+  createBuffer(data) {
+    const positionBuffer = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(data), this.gl.STATIC_DRAW);
+    return positionBuffer;
+  }
 
-    this.gl.useProgram(shaderProgram);
+  bindBuffer(buffer) {
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
+    return this;
+  }
+
+  useProgram(programName) {
+    this.gl.useProgram(this.shaderPrograms[programName]);
+    this.currentProgram = programName;
+    return this;
+  }
+
+  enableAttribute(attributeName) {
+    const shaderProgram = this.shaderPrograms[this.currentProgram];
     let attributeLocation = this.gl.getAttribLocation(shaderProgram, attributeName);
     this.gl.enableVertexAttribArray(attributeLocation);
     this.gl.vertexAttribPointer(attributeLocation, 2, this.gl.FLOAT, false, 0, 0);
+    return this;
   }
 
-  drawScene() {
+  setUniform(uniformName, data) {
+    const shaderProgram = this.shaderPrograms[this.currentProgram];
+    let uniformLocation = this.gl.getUniformLocation(shaderProgram, uniformName);
+    this.gl.uniform1f(uniformLocation, data);
+    return this;
+  }
+
+  drawScene(numberOfParticles) {
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, 6); // Draw the square
+    this.gl.drawArrays(this.gl.POINTS, 0, numberOfParticles);
   }
 }
