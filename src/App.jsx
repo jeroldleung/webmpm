@@ -1,6 +1,6 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home.jsx";
-import GL from "./pages/GL.jsx";
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Home from './pages/Home.jsx'
+import GL from './pages/GL.jsx'
 
 export default function App() {
   return (
@@ -10,5 +10,5 @@ export default function App() {
         <Route path="/gl" element={<GL />} />
       </Routes>
     </BrowserRouter>
-  );
+  )
 }

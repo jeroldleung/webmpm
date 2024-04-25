@@ -1,7 +1,7 @@
 function Selection({ control_item, onSelectHandler }) {
   const value_options = control_item.values.map((single_value) => (
     <option value={single_value}>{single_value}</option>
-  ));
+  ))
   return (
     <div>
       <label className="text-stone-400 text-sm text-center">
@@ -16,17 +16,17 @@ function Selection({ control_item, onSelectHandler }) {
         </select>
       </label>
     </div>
-  );
+  )
 }
 
 export default function ControlSelection({ options, onSelectHandler }) {
   const items = options.map((single_item) => (
     <Selection control_item={single_item} onSelectHandler={onSelectHandler} />
-  ));
+  ))
   return (
     <div className="flex flex-col gap-1 sm:w-56">
       <p className="font-bold text-lg">CONTROLS</p>
       {items}
     </div>
-  );
+  )
 }

@@ -1,30 +1,30 @@
-import { useEffect } from "react";
+import { useEffect } from 'react'
 
 export default function DisplayWindow({ userInteraction }) {
   const getMousePosition = (event) => {
     // Get the mouse coordinates relative to the canvas
-    const htmlCanvas = document.getElementById("result_canvas");
-    const rect = htmlCanvas.getBoundingClientRect();
-    const inv_img_size = 1 / htmlCanvas.width;
-    const x = (event.clientX - rect.left) * inv_img_size;
-    const y = (rect.bottom - event.clientY) * inv_img_size;
-    userInteraction.setMousePosition(x, y);
-  };
+    const htmlCanvas = document.getElementById('result_canvas')
+    const rect = htmlCanvas.getBoundingClientRect()
+    const inv_img_size = 1 / htmlCanvas.width
+    const x = (event.clientX - rect.left) * inv_img_size
+    const y = (rect.bottom - event.clientY) * inv_img_size
+    userInteraction.setMousePosition(x, y)
+  }
 
   const enableClickStrength = () => {
-    userInteraction.setClickStrength(200.0);
-  };
+    userInteraction.setClickStrength(200.0)
+  }
 
   const disableClickStrength = () => {
-    userInteraction.setClickStrength(0.0);
-  };
+    userInteraction.setClickStrength(0.0)
+  }
 
   useEffect(() => {
-    const htmlCanvas = document.getElementById("result_canvas");
-    htmlCanvas.addEventListener("mousemove", getMousePosition);
-    htmlCanvas.addEventListener("mousedown", enableClickStrength);
-    htmlCanvas.addEventListener("mouseup", disableClickStrength);
-  });
+    const htmlCanvas = document.getElementById('result_canvas')
+    htmlCanvas.addEventListener('mousemove', getMousePosition)
+    htmlCanvas.addEventListener('mousedown', enableClickStrength)
+    htmlCanvas.addEventListener('mouseup', disableClickStrength)
+  })
 
   return (
     <div>
@@ -35,5 +35,5 @@ export default function DisplayWindow({ userInteraction }) {
         height={512}
       ></canvas>
     </div>
-  );
+  )
 }

@@ -1,36 +1,36 @@
 export const simulationControl = {
-  currentState: "play",
+  currentState: 'play',
   handlers: {},
   changeState: function (value) {
-    this.currentState = value;
+    this.currentState = value
   },
   addState: function (state, task, nextState) {
-    this.handlers[state] = [task, nextState];
+    this.handlers[state] = [task, nextState]
   },
   run: function () {
-    let currentEvent = this.handlers[this.currentState];
-    currentEvent[0](); // run task
-    this.changeState(currentEvent[1]);
+    let currentEvent = this.handlers[this.currentState]
+    currentEvent[0]() // run task
+    this.changeState(currentEvent[1])
   },
-};
+}
 
 export const userInteraction = {
   mousePosition: [0.0, 0.0],
   clickStrength: 0.0,
   setMousePosition: function (x, y) {
-    this.mousePosition = [x, y];
+    this.mousePosition = [x, y]
   },
   setClickStrength: function (value) {
-    this.clickStrength = value;
+    this.clickStrength = value
   },
-};
+}
 
 export const parameterControl = {
   parameterValues: {},
   setValue: function (which, value) {
-    this.parameterValues[which] = value;
+    this.parameterValues[which] = value
   },
   getValue: function (which) {
-    return this.parameterValues[which];
+    return this.parameterValues[which]
   },
-};
+}

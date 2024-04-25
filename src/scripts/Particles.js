@@ -1,17 +1,25 @@
 export default class Particles {
-  constructor(scale) {
-    this.numbers = 3000;
-    this.position = [];
-    for (let i = 0; i < this.numbers * 2; i++) {
-      this.position[i] = Math.random() * scale - 0.5;
+  constructor(x, y, scale) {
+    this.numbers = 3000
+    this.position = []
+    this.velocity = []
+    for (let i = 0; i < this.numbers; i++) {
+      this.position[i * 2 + 0] = Math.random() * scale + x
+      this.position[i * 2 + 1] = Math.random() * scale + y
+      this.velocity[i * 2 + 0] = 0.0
+      this.velocity[i * 2 + 1] = 0.0
     }
   }
 
   getPosition() {
-    return this.position;
+    return this.position
+  }
+
+  getVelocity() {
+    return this.velocity
   }
 
   getCount() {
-    return this.numbers;
+    return this.numbers
   }
 }
