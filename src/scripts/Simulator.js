@@ -35,6 +35,7 @@ export default class Simulator {
     this.pvNewTex = this.wgl.createTex(this.ps.w, this.ps.h, null)
 
     // grid simulation state
+    this.gvTex = this.wgl.createTex(this.gRes, this.gRes, null)
 
     this.wgl.createPrograms({
       p2g: [p2g_vs, p2g_fs],
@@ -55,12 +56,18 @@ export default class Simulator {
       .bindFrameBuf(this.frameBuf)
       .viewport(0, 0, this.ps.w, this.ps.h)
       .useProgram('p2g')
-      .bindBuffer('a_quad', this.quadBuf)
+      .bindBuffer('a_pi', this.piBuf)
       .bindTexture('u_pxTex', this.pxTex, 0)
-      .setUniform2f('u_pTexDim', this.ps.w, this.ps.h)
-      .setUniform1f('u_dt', this.dt)
-      .drawToTexture(this.pxNewTex)
-      .drawFullscreen()
+      .bindTexture('u_pvTex', this.pvTex, 1)
+      .setUniform1i('u_gRes', this.gRes)
+      .drawToTexture(this.gvTex)
+      .enableBlendAdd()
+
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        this.wgl.setUniform2f('u_offset', i, j).drawPoints(this.ps.nums)
+      }
+    }
 
     this.wgl
       .bindFrameBuf(null)
