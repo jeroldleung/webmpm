@@ -1,25 +1,15 @@
 export default class Particles {
-  constructor(x, y, scale) {
-    this.numbers = 3000
-    this.position = []
-    this.velocity = []
-    for (let i = 0; i < this.numbers; i++) {
-      this.position[i * 2 + 0] = Math.random() * scale + x
-      this.position[i * 2 + 1] = Math.random() * scale + y
-      this.velocity[i * 2 + 0] = 0.0
-      this.velocity[i * 2 + 1] = 0.0
+  constructor(w, h, x, y, scale) {
+    this.w = w
+    this.h = h
+    this.x = x
+    this.y = y
+    this.scale = scale
+    this.nums = w * h
+    this.pi = new Float32Array(this.nums * 2)
+    for (let i = 0; i < this.nums; i++) {
+      this.pi[i * 2 + 0] = Math.random()
+      this.pi[i * 2 + 1] = Math.random()
     }
-  }
-
-  getPosition() {
-    return this.position
-  }
-
-  getVelocity() {
-    return this.velocity
-  }
-
-  getCount() {
-    return this.numbers
   }
 }

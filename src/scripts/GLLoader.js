@@ -47,15 +47,15 @@ export default class GLLoader {
     return shaderProgram
   }
 
-  createPrograms(programeParameters) {
-    for (let name in programeParameters) {
-      const vs = programeParameters[name].vertexShader
-      const fs = programeParameters[name].fragmentShader
+  createPrograms(programs) {
+    for (let name in programs) {
+      const vs = programs[name][0]
+      const fs = programs[name][1]
       this.shaderPrograms[name] = this.initShaderProgram(vs, fs)
     }
   }
 
-  createTexture(width, height, data) {
+  createTex(width, height, data) {
     const texture = this.gl.createTexture()
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
     this.gl.texImage2D(
@@ -92,7 +92,7 @@ export default class GLLoader {
     return texture
   }
 
-  createBuffer(data) {
+  createBuf(data) {
     const positionBuffer = this.gl.createBuffer()
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer)
     this.gl.bufferData(
@@ -103,11 +103,11 @@ export default class GLLoader {
     return positionBuffer
   }
 
-  createFrameBuffer() {
+  createFrameBuf() {
     return this.gl.createFramebuffer()
   }
 
-  bindFrameBuffer(frameBuffer) {
+  bindFrameBuf(frameBuffer) {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer)
     return this
   }
@@ -117,7 +117,14 @@ export default class GLLoader {
     return this
   }
 
-  frameBufferTexture2D(texture) {
+  enableBlendAdd() {
+    this.gl.enable(this.gl.BLEND)
+    this.gl.blendFunc(this.gl.ONE, this.gl.ONE)
+    this.gl.blendEquation(this.gl.FUNC_ADD)
+    return this
+  }
+
+  drawToTexture(texture) {
     this.gl.framebufferTexture2D(
       this.gl.FRAMEBUFFER,
       this.gl.COLOR_ATTACHMENT0,
@@ -167,6 +174,13 @@ export default class GLLoader {
     return this
   }
 
+  setUniform2f(uniformName, x, y) {
+    const shaderProgram = this.shaderPrograms[this.currentProgram]
+    let uniformLocation = this.gl.getUniformLocation(shaderProgram, uniformName)
+    this.gl.uniform2f(uniformLocation, x, y)
+    return this
+  }
+
   setUniform1i(uniformName, data) {
     const shaderProgram = this.shaderPrograms[this.currentProgram]
     let uniformLocation = this.gl.getUniformLocation(shaderProgram, uniformName)
@@ -174,9 +188,16 @@ export default class GLLoader {
     return this
   }
 
-  drawScene(numberOfParticles) {
+  drawPoints(numberOfParticles) {
+    this.gl.drawArrays(this.gl.POINTS, 0, numberOfParticles)
+  }
+
+  drawFullscreen() {
+    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
+  }
+
+  clear() {
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
     this.gl.clear(this.gl.COLOR_BUFFER_BIT)
-    this.gl.drawArrays(this.gl.POINTS, 0, numberOfParticles)
   }
 }

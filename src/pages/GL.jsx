@@ -4,8 +4,8 @@ import Simulator from '../scripts/Simulator'
 export default function GL() {
   useEffect(() => {
     let mpm = new Simulator()
-    let frame = async (time) => {
-      mpm.simulate(time)
+    let frame = async () => {
+      mpm.simulate()
       requestAnimationFrame(frame)
     }
     frame()

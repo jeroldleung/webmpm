@@ -1,96 +1,81 @@
 import GLLoader from './GLLoader.js'
 import Particles from './Particles.js'
-import {
-  transferToGridVert,
-  transferToGridFrag,
-} from '../shaders/transfertogrid.shader.js'
-import {
-  transferToParticlesVert,
-  transferToParticlesFrag,
-} from '../shaders/transfertoparticles.shader.js'
-import { advectVert, advectFrag } from '../shaders/advect.shader.js'
+import { p2g_vs, p2g_fs } from '../shaders/p2g.shader.js'
+import { g2p_vs, g2p_fs } from '../shaders/g2p.shader.js'
 
 export default class Simulator {
   constructor() {
     this.wgl = new GLLoader(document.getElementById('glcanvas'))
-    this.particles = new Particles(0.3, 0.3, 0.2)
-    this.gridResolution = 100 // square grid
-    this.gridSize = 1 / this.gridResolution
+    this.canvW = document.getElementById('glcanvas').width
+    this.ps = new Particles(60, 60, 0.3, 0.5, 0.2)
+    this.gRes = 100 // square grid
+    this.dt = 0.0001
 
-    this.indexData = new Float32Array(
-      this.gridResolution * this.gridResolution * 4,
+    this.frameBuf = this.wgl.createFrameBuf()
+    this.piBuf = this.wgl.createBuf(this.ps.pi)
+    this.quadBuf = this.wgl.createBuf(
+      new Float32Array([-1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0]),
     )
-    for (let i = 0; i < this.gridResolution; i++) {
-      for (let j = 0; j < this.gridResolution; j++) {
-        this.indexData[4 * (i * this.gridResolution + j) + 0] = i
-        this.indexData[4 * (i * this.gridResolution + j) + 1] = j
-        this.indexData[4 * (i * this.gridResolution + j) + 2] = 0.0
-        this.indexData[4 * (i * this.gridResolution + j) + 3] = 0.0
+
+    this.pxTexData = new Float32Array(this.ps.w * this.ps.h * 4)
+    for (let i = 0; i < this.ps.w; i++) {
+      for (let j = 0; j < this.ps.h; j++) {
+        let k = 4 * (i * this.ps.w + j)
+        this.pxTexData[k + 0] = Math.random() * this.ps.scale + this.ps.x
+        this.pxTexData[k + 1] = Math.random() * this.ps.scale + this.ps.y
+        this.pxTexData[k + 2] = 0.0
+        this.pxTexData[k + 3] = 0.0
       }
     }
 
-    this.frameBuffer = this.wgl.createFrameBuffer()
+    // particle simulation state
+    this.pxTex = this.wgl.createTex(this.ps.w, this.ps.h, this.pxTexData)
+    this.pxNewTex = this.wgl.createTex(this.ps.w, this.ps.h, null)
+    this.pvTex = this.wgl.createTex(this.ps.w, this.ps.h, null)
+    this.pvNewTex = this.wgl.createTex(this.ps.w, this.ps.h, null)
 
-    this.positionBuffer = this.wgl.createBuffer(this.particles.getPosition())
-    this.velocityBuffer = this.wgl.createBuffer(this.particles.getVelocity())
-
-    this.indexTexture = this.wgl.createTexture(
-      this.gridResolution,
-      this.gridResolution,
-      this.indexData,
-    )
-    this.velocityTexture = this.wgl.createTexture(
-      this.gridResolution,
-      this.gridResolution,
-      null,
-    )
+    // grid simulation state
 
     this.wgl.createPrograms({
-      transferToGrid: {
-        vertexShader: transferToGridVert,
-        fragmentShader: transferToGridFrag,
-      },
-      transferToParticles: {
-        vertexShader: transferToParticlesVert,
-        fragmentShader: transferToParticlesFrag,
-      },
-      advect: {
-        vertexShader: advectVert,
-        fragmentShader: advectFrag,
-      },
+      p2g: [p2g_vs, p2g_fs],
+      g2p: [g2p_vs, g2p_fs],
     })
   }
 
-  step(time) {
-    this.wgl
-      .bindFrameBuffer(this.frameBuffer)
-      .viewport(0, 0, this.gridResolution, this.gridResolution)
-      .useProgram('transferToGrid')
-      .bindBuffer('a_position', this.positionBuffer)
-      .bindBuffer('a_velocity', this.velocityBuffer)
-      .bindTexture('u_velocityTexture', this.velocityTexture, 0)
-      .bindTexture('u_indexTexture', this.indexTexture, 1)
-      .setUniform1f('u_gridSize', this.gridSize)
-      .frameBufferTexture2D(this.velocityTexture)
-
-    this.wgl
-      .bindFrameBuffer(this.frameBuffer)
-      .viewport(0, 0, this.gridResolution, this.gridResolution)
-      .useProgram('transferToParticles')
-      .bindBuffer('a_position', this.positionBuffer)
-
-    this.wgl
-      .bindFrameBuffer(null)
-      .viewport(0, 0, 512, 512)
-      .useProgram('advect')
-      .bindBuffer('a_position', this.positionBuffer)
-
-    this.wgl.drawScene(this.particles.getCount())
+  swapTexture(object, t1, t2) {
+    const tmp = object[t1]
+    object[t1] = object[t2]
+    object[t2] = tmp
   }
 
-  simulate(time) {
+  step() {
+    this.wgl.clear()
+
+    this.wgl
+      .bindFrameBuf(this.frameBuf)
+      .viewport(0, 0, this.ps.w, this.ps.h)
+      .useProgram('p2g')
+      .bindBuffer('a_quad', this.quadBuf)
+      .bindTexture('u_pxTex', this.pxTex, 0)
+      .setUniform2f('u_pTexDim', this.ps.w, this.ps.h)
+      .setUniform1f('u_dt', this.dt)
+      .drawToTexture(this.pxNewTex)
+      .drawFullscreen()
+
+    this.wgl
+      .bindFrameBuf(null)
+      .viewport(0, 0, this.canvW, this.canvW)
+      .useProgram('g2p')
+      .bindBuffer('a_pi', this.piBuf)
+      .bindTexture('u_pxNewTex', this.pxNewTex, 0)
+      .drawPoints(this.ps.nums)
+
+    this.swapTexture(this, 'pxTex', 'pxNewTex')
+  }
+
+  simulate() {
     for (let i = 0; i < 10; i++) {
-      this.step(time)
+      this.step()
     }
   }
 }
