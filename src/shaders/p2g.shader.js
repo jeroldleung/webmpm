@@ -3,19 +3,18 @@ attribute vec2 a_pi;
 
 uniform sampler2D u_pxTex;
 uniform sampler2D u_pvTex;
-uniform int u_gRes;
+uniform float u_gRes;
 uniform vec2 u_offset;
 
 varying vec2 v_pv;
 varying vec2 v_r;
 
 void main() {
-  float gRes = float(u_gRes);
   vec2 px = texture2D(u_pxTex, a_pi).xy;
-  vec2 fx = px * gRes;
+  vec2 fx = px * u_gRes;
   vec2 base = floor(fx - 0.5);
   vec2 gx = base + u_offset;
-  vec2 gx_pixel = (gx + 0.5) / gRes;
+  vec2 gx_pixel = (gx + 0.5) / u_gRes;
 
   v_pv = texture2D(u_pvTex, a_pi).xy;
   v_r = fx - gx;

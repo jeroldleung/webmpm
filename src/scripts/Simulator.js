@@ -1,6 +1,7 @@
 import GLLoader from './GLLoader.js'
 import Particles from './Particles.js'
 import { p2g_vs, p2g_fs } from '../shaders/p2g.shader.js'
+import { gravity_vs, gravity_fs } from '../shaders/gravity.shader.js'
 import { g2p_vs, g2p_fs } from '../shaders/g2p.shader.js'
 
 export default class Simulator {
@@ -36,9 +37,11 @@ export default class Simulator {
 
     // grid simulation state
     this.gvTex = this.wgl.createTex(this.gRes, this.gRes, null)
+    this.gvNewTex = this.wgl.createTex(this.gRes, this.gRes, null)
 
     this.wgl.createPrograms({
       p2g: [p2g_vs, p2g_fs],
+      gravity: [gravity_vs, gravity_fs],
       g2p: [g2p_vs, g2p_fs],
     })
   }
@@ -54,12 +57,12 @@ export default class Simulator {
 
     this.wgl
       .bindFrameBuf(this.frameBuf)
-      .viewport(0, 0, this.ps.w, this.ps.h)
+      .viewport(0, 0, this.gRes, this.gRes)
       .useProgram('p2g')
       .bindBuffer('a_pi', this.piBuf)
       .bindTexture('u_pxTex', this.pxTex, 0)
       .bindTexture('u_pvTex', this.pvTex, 1)
-      .setUniform1i('u_gRes', this.gRes)
+      .setUniform1f('u_gRes', this.gRes)
       .drawToTexture(this.gvTex)
       .enableBlendAdd()
 
@@ -68,6 +71,19 @@ export default class Simulator {
         this.wgl.setUniform2f('u_offset', i, j).drawPoints(this.ps.nums)
       }
     }
+
+    this.wgl.disableBlend()
+
+    this.wgl
+      .bindFrameBuf(this.frameBuf)
+      .viewport(0, 0, this.gRes, this.gRes)
+      .useProgram('gravity')
+      .bindBuffer('a_quad', this.quadBuf)
+      .bindTexture('u_gvTex', this.gvTex, 0)
+      .setUniform1f('u_gRes', this.gRes)
+      .setUniform1f('u_dt', this.dt)
+      .drawToTexture(this.gvNewTex)
+      .drawFullscreen()
 
     this.wgl
       .bindFrameBuf(null)

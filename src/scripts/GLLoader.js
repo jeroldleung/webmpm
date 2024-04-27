@@ -124,6 +124,10 @@ export default class GLLoader {
     return this
   }
 
+  disableBlend() {
+    this.gl.disable(this.gl.BLEND)
+  }
+
   drawToTexture(texture) {
     this.gl.framebufferTexture2D(
       this.gl.FRAMEBUFFER,
