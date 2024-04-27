@@ -20,6 +20,7 @@ void main() {
   v_r = fx - gx;
 
   gl_Position = vec4(gx_pixel * 2.0 - 1.0, 0.0, 1.0);
+  gl_PointSize = 3.0;
 }
 `
 

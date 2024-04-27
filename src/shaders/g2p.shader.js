@@ -1,17 +1,19 @@
 export const g2p_vs = `
-attribute vec2 a_pi;
-
-uniform sampler2D u_pxNewTex;
+attribute vec2 a_quad;
 
 void main() {
-  vec2 px = texture2D(u_pxNewTex, a_pi).xy;
-  gl_Position = vec4(px * 2.0 - 1.0, 0.0, 1.0);
-  gl_PointSize = 2.0;
+  gl_Position = vec4(a_quad, 0.0, 1.0);
 }
 `
 
 export const g2p_fs = `
 precision highp float;
+
+uniform sampler2D u_pxTex;
+uniform sampler2D u_gvNewTex;
+uniform vec2 u_pTexDim;
+uniform float u_gRes;
+uniform vec2 u_offset;
 
 float quadraticBSpline(float r) {
   r = abs(r);
@@ -29,6 +31,15 @@ float weight(vec2 v) {
 }
 
 void main() {
-  gl_FragColor = vec4(1.0, 0.0, 0.5, 1.0);
+  vec2 texcoord = gl_FragCoord.xy / u_pTexDim;
+  vec2 px = texture2D(u_pxTex, texcoord).xy;
+  vec2 fx = px * u_gRes;
+  vec2 base = floor(fx - 0.5);
+  vec2 gx = base + u_offset;
+  vec2 gx_pixel = (gx + 0.5) / u_gRes;
+  vec2 gv = texture2D(u_gvNewTex, gx_pixel).xy;
+  float w = weight(fx - gx);
+
+  gl_FragColor = vec4(w * gv, 0.0, 1.0);
 }
 `

@@ -86,14 +86,27 @@ export default class Simulator {
       .drawFullscreen()
 
     this.wgl
-      .bindFrameBuf(null)
-      .viewport(0, 0, this.canvW, this.canvW)
+      .bindFrameBuf(this.frameBuf)
+      .viewport(0, 0, this.ps.w, this.ps.h)
       .useProgram('g2p')
-      .bindBuffer('a_pi', this.piBuf)
-      .bindTexture('u_pxNewTex', this.pxNewTex, 0)
-      .drawPoints(this.ps.nums)
+      .bindBuffer('a_quad', this.quadBuf)
+      .bindTexture('u_pxTex', this.pxTex, 0)
+      .bindTexture('u_gvNewTex', this.gvNewTex, 1)
+      .setUniform2f('u_pTexDim', this.ps.w, this.ps.h)
+      .setUniform1f('u_gRes', this.gRes)
+      .drawToTexture(this.pvNewTex)
+      .enableBlendAdd()
+
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        this.wgl.setUniform2f('u_offset', i, j).drawFullscreen()
+      }
+    }
+
+    this.wgl.disableBlend()
 
     this.swapTexture(this, 'pxTex', 'pxNewTex')
+    this.swapTexture(this, 'pvTex', 'pvNewTex')
   }
 
   simulate() {
