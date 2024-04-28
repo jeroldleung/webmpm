@@ -3,6 +3,7 @@ import Particles from './Particles.js'
 import { p2g_vs, p2g_fs } from '../shaders/p2g.shader.js'
 import { gravity_vs, gravity_fs } from '../shaders/gravity.shader.js'
 import { g2p_vs, g2p_fs } from '../shaders/g2p.shader.js'
+import { advect_vs, advect_fs } from '../shaders/advect.shader.js'
 
 export default class Simulator {
   constructor() {
@@ -43,6 +44,7 @@ export default class Simulator {
       p2g: [p2g_vs, p2g_fs],
       gravity: [gravity_vs, gravity_fs],
       g2p: [g2p_vs, g2p_fs],
+      advect: [advect_vs, advect_fs],
     })
   }
 
@@ -104,6 +106,18 @@ export default class Simulator {
     }
 
     this.wgl.disableBlend()
+
+    this.wgl
+      .bindFrameBuf(this.frameBuf)
+      .viewport(0, 0, this.ps.w, this.ps.h)
+      .useProgram('advect')
+      .bindBuffer('a_quad', this.quadBuf)
+      .bindTexture('u_pxTex', this.pxTex, 0)
+      .bindTexture('u_pvNewTex', this.pvNewTex, 1)
+      .setUniform2f('u_pTexDim', this.ps.w, this.ps.h)
+      .setUniform1f('u_dt', this.dt)
+      .drawToTexture(this.pxNewTex)
+      .drawFullscreen()
 
     this.swapTexture(this, 'pxTex', 'pxNewTex')
     this.swapTexture(this, 'pvTex', 'pvNewTex')
