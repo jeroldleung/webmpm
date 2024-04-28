@@ -4,6 +4,7 @@ import { p2g_vs, p2g_fs } from '../shaders/p2g.shader.js'
 import { gravity_vs, gravity_fs } from '../shaders/gravity.shader.js'
 import { g2p_vs, g2p_fs } from '../shaders/g2p.shader.js'
 import { advect_vs, advect_fs } from '../shaders/advect.shader.js'
+import { render_vs, render_fs } from '../shaders/render.shader.js'
 
 export default class Simulator {
   constructor() {
@@ -45,6 +46,7 @@ export default class Simulator {
       gravity: [gravity_vs, gravity_fs],
       g2p: [g2p_vs, g2p_fs],
       advect: [advect_vs, advect_fs],
+      render: [render_vs, render_fs],
     })
   }
 
@@ -118,6 +120,14 @@ export default class Simulator {
       .setUniform1f('u_dt', this.dt)
       .drawToTexture(this.pxNewTex)
       .drawFullscreen()
+
+    this.wgl
+      .bindFrameBuf(null)
+      .viewport(0, 0, this.canvW, this.canvW)
+      .useProgram('render')
+      .bindBuffer('a_pi', this.piBuf)
+      .bindTexture('u_pxNewTex', this.pxNewTex, 0)
+      .drawPoints(this.ps.nums)
 
     this.swapTexture(this, 'pxTex', 'pxNewTex')
     this.swapTexture(this, 'pvTex', 'pvNewTex')
