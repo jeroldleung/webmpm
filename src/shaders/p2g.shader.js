@@ -19,8 +19,8 @@ void main() {
   v_pv = texture2D(u_pvTex, a_pi).xy;
   v_r = fx - gx;
 
-  gl_Position = vec4(gx_pixel * 2.0 - 1.0, 0.0, 1.0);
-  gl_PointSize = 3.0;
+  gl_Position = vec4(gx_pixel, 0.0, 1.0);
+  gl_PointSize = 1.0;
 }
 `
 
