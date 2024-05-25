@@ -8,6 +8,7 @@ export const CONTROL_ITEMS = [
       "Jelly Cubes",
       "Fluid-Solid Coupling",
       "Non-Sticky Fluid-Solid Coupling",
+      "Sand",
     ],
   },
   {
