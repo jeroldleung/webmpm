@@ -108,6 +108,20 @@ export default class MPM {
     return stress;
   });
 
+  deformationGradientUpdate = ti.func((material, p) => {
+    if (material.type == 0) {
+      material.J[p] = (1.0 + this.dt * (material.C[p][0][0] + material.C[p][1][1])) * material.J[p];
+    } else if (material.type == 1) {
+      material.F[p] = (
+        [
+          [1.0, 0.0],
+          [0.0, 1.0],
+        ] +
+        this.dt * material.C[p]
+      ).matmul(material.F[p]);
+    }
+  });
+
   singleGridUpdate = ti.func((grid, I, mouse_position, click_strength) => {
     let i = I[0];
     let j = I[1];
@@ -244,14 +258,7 @@ export default class MPM {
           material.v[p] = new_v;
           material.C[p] = new_C;
           material.x[p] = material.x[p] + this.dt * new_v;
-          material.J[p] = (1.0 + this.dt * (new_C[0][0] + new_C[1][1])) * material.J[p];
-          material.F[p] = (
-            [
-              [1.0, 0.0],
-              [0.0, 1.0],
-            ] +
-            this.dt * material.C[p]
-          ).matmul(material.F[p]);
+          this.deformationGradientUpdate(material, p);
         }
       },
     );
