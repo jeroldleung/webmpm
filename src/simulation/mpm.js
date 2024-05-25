@@ -14,6 +14,17 @@ export default class MPM {
     return mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
   });
 
+  inverse = ti.func((mat) => {
+    let frac = 1 / this.determinant(mat);
+    return (
+      frac *
+      [
+        [mat[1][1], -mat[0][1]],
+        [-mat[1][0], mat[0][0]],
+      ]
+    );
+  });
+
   quadraticKernel = ti.func((x) => {
     x = Math.abs(x);
     let res = 0.0;
@@ -58,6 +69,30 @@ export default class MPM {
     return stress;
   });
 
+  sandPressure = ti.func((material, p, E) => {
+    let nu = 0.2; // Poisson's ratio
+    let mu = E / (2 * (1 + nu)); // Lame parameters
+    let la = (E * nu) / ((1 + nu) * (1 - 2 * nu)); // Lame parameters
+    let svd = ti.svd2D(material.F[p]);
+    let U = svd.U;
+    let sig = svd.E;
+    let V = svd.V;
+    let inv_sig = this.inverse(sig);
+    let e = [
+      [1.0, 0.0],
+      [0.0, 1.0],
+    ];
+
+    e[0][0] = ti.log(sig[0][0]);
+    e[1][1] = ti.log(sig[1][1]);
+
+    let PK1 = U.matmul(2 * mu * inv_sig.matmul(e) + la * (e[0][0] + e[1][1]) * inv_sig).matmul(
+      V.transpose(),
+    );
+    let stress = PK1.matmul(material.F[p].transpose());
+    return stress;
+  });
+
   computeStress = ti.func((material, p, E) => {
     let stress = [
       [1.0, 0.0],
@@ -67,6 +102,8 @@ export default class MPM {
       stress = this.waterPressure(material, p, E);
     } else if (material.type == 1) {
       stress = this.fixedCorotated(material, p, E);
+    } else if (material.type == 2) {
+      stress = this.sandPressure(material, p, E);
     }
     return stress;
   });
