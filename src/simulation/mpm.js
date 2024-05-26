@@ -140,7 +140,9 @@ export default class MPM {
     let yp = Fnorm + ((2 * la + 2 * mu) / (2 * mu)) * (e[0][0] + e[1][1]) * material.ap[p];
     let res = [0.0, 0.0, 0.0];
     if (yp <= 0.0) {
-      res = res;
+      res[0] = sig[0][0];
+      res[1] = sig[1][1];
+      res[2] = 0.0;
     } else if (Fnorm == 0 || e[0][0] + e[1][1] > 0) {
       res[0] = 1.0;
       res[1] = 1.0;
