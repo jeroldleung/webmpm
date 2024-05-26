@@ -22,6 +22,9 @@ export default class Scene {
         this.objects.push(new Material(0, 1, 0.4, 1, [0.2, 0.1], [0.06, 0.46, 0.43, 1.0]));
         this.objects.push(new Material(1, 1, 0.2, 0.5, [0.5, 0.6], [0.97, 0.44, 0.44, 1.0]));
         break;
+      case "Sand":
+        this.objects.push(new Material(2, 1, 0.4, 1, [0.2, 0.1], [0.96, 0.74, 0.38, 1.0]));
+        break;
     }
   }
 }

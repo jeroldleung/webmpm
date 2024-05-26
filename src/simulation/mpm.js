@@ -8,10 +8,22 @@ export default class MPM {
     this.grid = [];
     this.mappingGrid = {};
     this.dt = 0.0001;
+    this.pi = 3.14159265358979;
   }
 
   determinant = ti.func((mat) => {
     return mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
+  });
+
+  inverse = ti.func((mat) => {
+    let frac = 1 / this.determinant(mat);
+    return (
+      frac *
+      [
+        [mat[1][1], -mat[0][1]],
+        [-mat[1][0], mat[0][0]],
+      ]
+    );
   });
 
   quadraticKernel = ti.func((x) => {
@@ -58,6 +70,30 @@ export default class MPM {
     return stress;
   });
 
+  sandPressure = ti.func((material, p, E) => {
+    let nu = 0.2; // Poisson's ratio
+    let mu = E / (2 * (1 + nu)); // Lame parameters
+    let la = (E * nu) / ((1 + nu) * (1 - 2 * nu)); // Lame parameters
+    let svd = ti.svd2D(material.F[p]);
+    let U = svd.U;
+    let sig = svd.E;
+    let V = svd.V;
+    let inv_sig = this.inverse(sig);
+    let e = [
+      [1.0, 0.0],
+      [0.0, 1.0],
+    ];
+
+    e[0][0] = ti.log(sig[0][0]);
+    e[1][1] = ti.log(sig[1][1]);
+
+    let PK1 = U.matmul(2 * mu * inv_sig.matmul(e) + la * (e[0][0] + e[1][1]) * inv_sig).matmul(
+      V.transpose(),
+    );
+    let stress = PK1.matmul(material.F[p].transpose());
+    return stress;
+  });
+
   computeStress = ti.func((material, p, E) => {
     let stress = [
       [1.0, 0.0],
@@ -67,8 +103,102 @@ export default class MPM {
       stress = this.waterPressure(material, p, E);
     } else if (material.type == 1) {
       stress = this.fixedCorotated(material, p, E);
+    } else if (material.type == 2) {
+      stress = this.sandPressure(material, p, E);
     }
     return stress;
+  });
+
+  project = ti.func((material, sig, p, E) => {
+    let nu = 0.2; // Poisson's ratio
+    let mu = E / (2 * (1 + nu)); // Lame parameters
+    let la = (E * nu) / ((1 + nu) * (1 - 2 * nu)); // Lame parameters
+    let e0 = [
+      [1.0, 0.0],
+      [0.0, 1.0],
+    ];
+
+    e0[0][0] = ti.log(sig[0][0]);
+    e0[1][1] = ti.log(sig[1][1]);
+
+    let e =
+      e0 +
+      (material.vcs[p] / 2) *
+        [
+          [1.0, 0.0],
+          [0.0, 1.0],
+        ];
+    let ehat =
+      e -
+      ((e[0][0] + e[1][1]) / 2) *
+        [
+          [1.0, 0.0],
+          [0.0, 1.0],
+        ];
+    let ehat_sqsum = ehat[0][0] ** 2 + ehat[1][1] ** 2;
+    let Fnorm = ti.sqrt(ehat_sqsum);
+    let yp = Fnorm + ((2 * la + 2 * mu) / (2 * mu)) * (e[0][0] + e[1][1]) * material.ap[p];
+    let res = [0.0, 0.0, 0.0];
+    if (yp <= 0.0) {
+      res[0] = sig[0][0];
+      res[1] = sig[1][1];
+      res[2] = 0.0;
+    } else if (Fnorm == 0 || e[0][0] + e[1][1] > 0) {
+      res[0] = 1.0;
+      res[1] = 1.0;
+      let e_sqsum = e[0][0] ** 2 + e[1][1] ** 2;
+      res[2] = ti.sqrt(e_sqsum);
+    } else {
+      let Hp = e - (yp / Fnorm) * ehat;
+      res[0] = ti.exp(Hp[0][0]);
+      res[1] = ti.exp(Hp[1][1]);
+      res[2] = yp;
+    }
+    return res;
+  });
+
+  hardening = ti.func((material, dq, p) => {
+    material.qp[p] += dq;
+    let phi = 40.0;
+    phi = (phi / 180) * this.pi;
+    let sin_phi = ti.sin(phi);
+    material.ap[p] = (ti.sqrt(2 / 3) * (2 * sin_phi)) / (3 - sin_phi);
+  });
+
+  deformationGradientUpdate = ti.func((material, p, E) => {
+    if (material.type == 0) {
+      material.J[p] = (1.0 + this.dt * (material.C[p][0][0] + material.C[p][1][1])) * material.J[p];
+    } else if (material.type == 1) {
+      material.F[p] = (
+        [
+          [1.0, 0.0],
+          [0.0, 1.0],
+        ] +
+        this.dt * material.C[p]
+      ).matmul(material.F[p]);
+    } else if (material.type == 2) {
+      material.F[p] = (
+        [
+          [1.0, 0.0],
+          [0.0, 1.0],
+        ] +
+        this.dt * material.C[p]
+      ).matmul(material.F[p]);
+      let svd = ti.svd2D(material.F[p]);
+      let U = svd.U;
+      let sig = svd.E;
+      let V = svd.V;
+      let val = this.project(material, sig, p, E);
+      let new_sig = [
+        [val[0], 0.0],
+        [0.0, val[1]],
+      ];
+      let dq = val[2];
+      this.hardening(material, dq, p);
+      let new_F = U.matmul(new_sig).matmul(V.transpose());
+      material.vcs[p] += ti.log(this.determinant(material.F[p])) - ti.log(this.determinant(new_F));
+      material.F[p] = new_F;
+    }
   });
 
   singleGridUpdate = ti.func((grid, I, mouse_position, click_strength) => {
@@ -183,8 +313,8 @@ export default class MPM {
 
     this.gridToParticle = ti.classKernel(
       this,
-      { material: ti.template(), grid: ti.template() },
-      (material, grid) => {
+      { material: ti.template(), grid: ti.template(), E: ti.f32 },
+      (material, grid, E) => {
         for (let p of ti.range(material.n_particles)) {
           let base = ti.i32(material.x[p] * grid.inv_dx - 0.5);
           let fx = material.x[p] * grid.inv_dx - ti.f32(base);
@@ -207,14 +337,7 @@ export default class MPM {
           material.v[p] = new_v;
           material.C[p] = new_C;
           material.x[p] = material.x[p] + this.dt * new_v;
-          material.J[p] = (1.0 + this.dt * (new_C[0][0] + new_C[1][1])) * material.J[p];
-          material.F[p] = (
-            [
-              [1.0, 0.0],
-              [0.0, 1.0],
-            ] +
-            this.dt * material.C[p]
-          ).matmul(material.F[p]);
+          this.deformationGradientUpdate(material, p, E);
         }
       },
     );
@@ -238,7 +361,11 @@ export default class MPM {
       });
       this.updateGridVelocity(userInteraction.mousePosition, userInteraction.clickStrength);
       this.material.forEach((element, index) => {
-        this.gridToParticle(element, this.grid[this.mappingGrid[index]]);
+        this.gridToParticle(
+          element,
+          this.grid[this.mappingGrid[index]],
+          parameterControl.getValue("E"),
+        );
       });
     }
   }
