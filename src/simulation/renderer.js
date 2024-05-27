@@ -1,4 +1,5 @@
 import * as ti from "taichi.js";
+import { parameterControl } from "./control";
 
 export default class Renderer {
   constructor() {
@@ -12,11 +13,15 @@ export default class Renderer {
       }
     });
 
-    this.draw = ti.classKernel(this, { object: ti.template() }, (object) => {
+    this.draw = ti.classKernel(this, { object: ti.template(), psize: ti.i32 }, (object, psize) => {
       for (let i of ti.range(object.n_particles)) {
         let pos = object.x[i];
         let ipos = ti.i32(pos * this.img_size);
-        this.image[ipos] = object.color;
+        for (let j of ti.range(psize)) {
+          for (let k of ti.range(psize)) {
+            this.image[ipos + [j, k]] = object.color;
+          }
+        }
       }
     });
   }
@@ -24,7 +29,7 @@ export default class Renderer {
   async render(scene) {
     this.clear();
     scene.objects.forEach((element) => {
-      this.draw(element);
+      this.draw(element, parameterControl.getValue("psize"));
     });
     this.canvas.setImage(this.image);
   }

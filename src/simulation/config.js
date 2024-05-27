@@ -42,4 +42,12 @@ export const PARAMETER_ITEMS = [
     stepVal: 100,
     defaultVal: 1000,
   },
+  {
+    name: "Particle Size",
+    id: "psize",
+    minVal: 1,
+    maxVal: 5,
+    stepVal: 1,
+    defaultVal: 2,
+  },
 ];
