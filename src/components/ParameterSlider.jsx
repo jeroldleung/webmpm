@@ -25,7 +25,7 @@ function Slider({ item, parameterControl }) {
         min={item.minVal}
         max={item.maxVal}
         step={item.stepVal}
-        className="w-full h-px bg-stone-400 accent-black appearance-none cursor-pointer"
+        className="w-full h-px bg-stone-400 accent-black appearance-none cursor-pointer focus:outline-none"
       />
     </div>
   );
