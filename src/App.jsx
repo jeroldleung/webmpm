@@ -84,7 +84,7 @@ export default function App() {
       <TopControlBar simulationControl={simulationControl} />
       <div className="flex py-8 place-content-center gap-4 flex-wrap">
         <DisplayWindow userInteraction={userInteraction} />
-        <div className="flex flex-col sm:max-md:flex-row py-2 px-1 gap-8">
+        <div className="flex flex-col sm:max-md:flex-row py-2 px-1 gap-5">
           <Stats fps={fps} pnum={pnum} />
           <ControlSelection options={CONTROL_ITEMS} onSelectHandler={handleSelection} />
           <ParameterSlider options={PARAMETER_ITEMS} parameterControl={parameterControl} />
