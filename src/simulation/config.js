@@ -9,6 +9,7 @@ export const CONTROL_ITEMS = [
       "Fluid-Solid Coupling",
       "Non-Sticky Fluid-Solid Coupling",
       "Sand",
+      "Sand without volume preserved",
     ],
   },
   {
@@ -32,7 +33,7 @@ export const PARAMETER_ITEMS = [
     minVal: 1,
     maxVal: 30,
     stepVal: 1,
-    defaultVal: 25,
+    defaultVal: 20,
   },
   {
     name: "Young's modulus",
@@ -41,5 +42,13 @@ export const PARAMETER_ITEMS = [
     maxVal: 2000,
     stepVal: 100,
     defaultVal: 1000,
+  },
+  {
+    name: "Particle Size",
+    id: "psize",
+    minVal: 1,
+    maxVal: 5,
+    stepVal: 1,
+    defaultVal: 2,
   },
 ];

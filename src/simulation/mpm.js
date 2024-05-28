@@ -197,6 +197,7 @@ export default class MPM {
       this.hardening(material, dq, p);
       let new_F = U.matmul(new_sig).matmul(V.transpose());
       material.vcs[p] += ti.log(this.determinant(material.F[p])) - ti.log(this.determinant(new_F));
+      material.vcs[p] *= material.enableVolPreserved;
       material.F[p] = new_F;
     }
   });
@@ -224,17 +225,47 @@ export default class MPM {
       if (j > grid.n_grid - 3 && grid.grid_v[I][1] > 0) {
         grid.grid_v[I][1] = 0;
       }
+
+      // friction
+      let boundary_normal = [0.0, 0.0];
+      if (i == 3 && grid.grid_v[I][0] < 0) {
+        boundary_normal[0] = 1.0;
+      }
+      if (i == grid.n_grid - 3 && grid.grid_v[I][0] > 0) {
+        boundary_normal[0] = -1.0;
+      }
+      if (j == 3 && grid.grid_v[I][1] < 0) {
+        boundary_normal[1] = 1.0;
+      }
+      if (j == grid.n_grid - 3 && grid.grid_v[I][1] > 0) {
+        boundary_normal[1] = -1.0;
+      }
+      let mu_b = 0.75;
+      if ((grid.material == 1 || grid.material == 2) && boundary_normal.norm() != 0) {
+        let vn = grid.grid_v[I].dot(boundary_normal);
+        if (vn < 0) {
+          let vt_tangent = grid.grid_v[I] - vn * boundary_normal;
+          let vt = vt_tangent.norm();
+          if (vt > 1e-12) {
+            let frac = -mu_b * vn;
+            if (vt < frac) {
+              frac = vt;
+            }
+            grid.grid_v[I] = vt_tangent - frac * vt_tangent.normalized();
+          }
+        }
+      }
     }
   });
 
   async init(scene) {
     this.material = scene.objects;
-    this.grid.push(new Grid());
+    this.grid.push(new Grid(this.material[0].type));
 
     for (let i = 0; i < this.material.length; i++) {
       this.mappingGrid[i] = 0;
       if (i > 0 && scene.scene == "Non-Sticky Fluid-Solid Coupling") {
-        this.grid.push(new Grid());
+        this.grid.push(new Grid(this.material[i].type));
         this.mappingGrid[i] = i;
       }
     }
