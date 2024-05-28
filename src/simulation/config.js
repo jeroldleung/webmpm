@@ -33,7 +33,7 @@ export const PARAMETER_ITEMS = [
     minVal: 1,
     maxVal: 30,
     stepVal: 1,
-    defaultVal: 25,
+    defaultVal: 20,
   },
   {
     name: "Young's modulus",
