@@ -25,6 +25,9 @@ export default class Scene {
       case "Sand":
         this.objects.push(new Material(2, 1, 0.4, 1, [0.2, 0.1], [0.96, 0.74, 0.38, 1.0]));
         break;
+      case "Sand without volume preserved":
+        this.objects.push(new Material(2, 1, 0.4, 1, [0.2, 0.1], [0.96, 0.74, 0.38, 1.0]));
+        break;
     }
   }
 }

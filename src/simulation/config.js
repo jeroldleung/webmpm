@@ -9,6 +9,7 @@ export const CONTROL_ITEMS = [
       "Fluid-Solid Coupling",
       "Non-Sticky Fluid-Solid Coupling",
       "Sand",
+      "Sand without volume preserved",
     ],
   },
   {

@@ -197,6 +197,7 @@ export default class MPM {
       this.hardening(material, dq, p);
       let new_F = U.matmul(new_sig).matmul(V.transpose());
       material.vcs[p] += ti.log(this.determinant(material.F[p])) - ti.log(this.determinant(new_F));
+      material.vcs[p] *= material.enableVolPreserved;
       material.F[p] = new_F;
     }
   });

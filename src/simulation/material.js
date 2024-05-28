@@ -22,6 +22,10 @@ export default class Material {
     this.vcs = ti.field(ti.f32, this.n_particles); // for sand
     this.ap = ti.field(ti.f32, this.n_particles); // for sand
     this.qp = ti.field(ti.f32, this.n_particles); // for sand
+    this.enableVolPreserved = 0;
+    if (document.getElementById("scenes").value == "Sand") {
+      this.enableVolPreserved = 1;
+    }
 
     this.init = ti.classKernel(this, () => {
       for (let i of ti.range(this.n_particles)) {
