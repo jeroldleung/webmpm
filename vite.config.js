@@ -4,6 +4,7 @@ import taichi from "rollup-plugin-taichi";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "/webmpm/",
   build: {
     rollupOptions: {
       plugins: [taichi()],
